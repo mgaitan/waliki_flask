@@ -377,6 +377,7 @@ class EditorForm(Form):
     title = TextField('', [Required()])
     body = TextAreaField('', [Required()])
     tags = TextField('')
+    message = TextField('')
 
 
 class LoginForm(Form):
@@ -423,12 +424,9 @@ wiki = Wiki(app.config.get('CONTENT_DIR'))
 
 users = UserManager(app.config.get('CONTENT_DIR'))
 
-
 if app.config.get('USE_GIT', False):
     from extensions._git import git_plugin
     page_saved.connect(git_plugin)
-
-
 
 
 @loginmanager.user_loader
@@ -484,7 +482,7 @@ def edit(url):
             page = wiki.get_bare(url)
         form.populate_obj(page)
         page.save()
-        page_saved.send(page)
+        page_saved.send(page, message=form.message.data.encode('utf-8'))
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
     return render_template('editor.html', form=form, page=page)

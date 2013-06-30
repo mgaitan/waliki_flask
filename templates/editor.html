@@ -16,7 +16,8 @@ Wiki Editor
 			{{ input(form.title, placeholder="Title", class="span7") }}
 			{{ input(form.body, placeholder="Markdown", class="span7", rows="20") }}
 			{{ input(form.tags, placeholder="Tags (comma separated)", class="span7") }}
-			<div class="form-actions">
+			{{ input(form.message, placeholder="Changes summary", class="span7") }}
+            <div class="form-actions">
         <div class="pull-left">
           <a class="btn" href="#preview" id="previewbtn">Preview</a>
         </div>

@@ -27,16 +27,17 @@ class GitPlugin(object):
         blob = Blob(repo, istream.binsha, 0100644, blob_path)
         return blob
 
-    def commit(self, page, message=''):
+    def commit(self, page, message=u''):
         index = self.repository.index
         blob = self._create_blob_for(page.path)
         if os.path.isfile(blob.abspath):
             index.add([blob.path])
         else:
             index.add([IndexEntry.from_blob(blob)])
+        import ipdb; ipdb.set_trace()
         return index.commit(message)
 
 
 def git_plugin(page, **extra):
     gitp = GitPlugin()
-    gitp.commit(page)
+    gitp.commit(page, extra['message'])

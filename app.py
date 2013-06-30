@@ -12,7 +12,7 @@ from flask.ext.wtf import (Form, TextField, TextAreaField, PasswordField,
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
-
+from signals import page_saved
 
 """
     Wiki classes
@@ -402,6 +402,7 @@ class LoginForm(Form):
 """
 
 app = Flask(__name__)
+app.debug = True
 app.config['CONTENT_DIR'] = 'content'
 app.config['TITLE'] = 'wiki'
 try:
@@ -421,6 +422,13 @@ loginmanager.login_view = 'user_login'
 wiki = Wiki(app.config.get('CONTENT_DIR'))
 
 users = UserManager(app.config.get('CONTENT_DIR'))
+
+
+if app.config.get('USE_GIT', False):
+    from extensions._git import git_plugin
+    page_saved.connect(git_plugin)
+
+
 
 
 @loginmanager.user_loader
@@ -476,6 +484,7 @@ def edit(url):
             page = wiki.get_bare(url)
         form.populate_obj(page)
         page.save()
+        page_saved.send(page)
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
     return render_template('editor.html', form=form, page=page)

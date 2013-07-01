@@ -7,25 +7,27 @@ but found nothing, I just wrote this down. I hope that it might help others ,too
 
 ## Features
 
-* Markdown (default) or reStructuredText Syntax Editing
+* Markdown (default) or reStructuredText Syntax Editing (requires `docutils`)
 * Tags
 * Regex Search
 * Random URLs
 * Web Editor
+* Simple filesystem based cache using [flask-cache](http://pythonhosted.org/Flask-Cache/)
 * Pages can also be edited manually, possible uses are:
 	* use the cli
 	* use your favorite editor
 	* sync with dropbox
 	* and many more
-* easily themable
+* Public or login required modes (New users can sign up) 
+* Experimental git tracked content (set `USE_GIT=True`. Require `GitPython`) 
+* Easily themable
 
 ### Planned
 
 * Speed Improvements
 	* Code Optimizations
-	* Caching
 * Wikilinks-Support
-* Access protection (for private wikis or to limit edits to a known group)
+* Improve access protection
 * Settings via the webinterface
 
 

@@ -17,7 +17,7 @@ from flask.ext.wtf.html5 import EmailField
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
-from exts import cache
+from extensions.cache import cache
 from signals import page_saved
 
 """

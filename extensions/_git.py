@@ -34,7 +34,6 @@ class GitPlugin(object):
             index.add([blob.path])
         else:
             index.add([IndexEntry.from_blob(blob)])
-        import ipdb; ipdb.set_trace()
         return index.commit(message)
 
 

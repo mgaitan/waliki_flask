@@ -1,1 +1,2 @@
+docutils==0.10         # for restructuredtext markup
 GitPython==0.3.2.RC1   # for git plugin

@@ -47,6 +47,17 @@ class GitPlugin(object):
         log = self.repository.git.log('--format=%an %ad', '--date=relative',
                                       path).split('\n')[0]
         page.footer = 'Last edition by %s' % log
+        self.page_diff(page)
+
+    def page_diff(self, page, old=None, new=None):
+        path = self._get_blob_path(page.path)
+        history = self.repository.git.log('--format=%h', path).split('\n')
+        if old is None:
+            old = history[1]
+        if new is None:
+            new = history[0]
+        page.old_content = self.repository.git.show('%s:%s' % (old, path))
+        page.new_content = self.repository.git.show('%s:%s' % (new, path))
 
 
 def git_commit(page, **extra):

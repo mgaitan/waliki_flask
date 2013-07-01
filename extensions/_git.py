@@ -27,16 +27,18 @@ class GitPlugin(object):
         blob = Blob(repo, istream.binsha, 0100644, blob_path)
         return blob
 
-    def commit(self, page, message=u''):
+    def commit(self, page, user=None, message=u''):
         index = self.repository.index
         blob = self._create_blob_for(page.path)
         if os.path.isfile(blob.abspath):
             index.add([blob.path])
         else:
             index.add([IndexEntry.from_blob(blob)])
+        if user and user.is_authenticated():
+            os.environ['GIT_AUTHOR_NAME'] = user.data['full_name'] or user.name
+            os.environ['GIT_AUTHOR_EMAIL'] = user.data['email']
         return index.commit(message)
-
 
 def git_plugin(page, **extra):
     gitp = GitPlugin()
-    gitp.commit(page, extra['message'])
+    gitp.commit(page, extra['user'], extra['message'])

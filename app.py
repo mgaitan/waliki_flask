@@ -666,7 +666,9 @@ def edit(url):
         form.populate_obj(page)
         page.save()
         page.delete_cache()
-        page_saved.send(page, message=form.message.data.encode('utf-8'))
+        page_saved.send(page,
+                        user=current_user,
+                        message=form.message.data.encode('utf-8'))
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
     return render_template('editor.html', form=form, page=page,

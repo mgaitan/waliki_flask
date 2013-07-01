@@ -18,6 +18,12 @@
     </div>
   </div>
 	{{ page }}
+ {% if page.footer %}
+   <div id="footer">
+   <hr>
+   <div class="pull-right"><em><small>{{ page.footer }}</small></em></div>
+</div>
+ {% endif %}
 {% endblock content %}
 
 {% block sidebar %}

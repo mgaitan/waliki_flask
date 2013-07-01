@@ -18,7 +18,7 @@ from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from extensions.cache import cache
-from signals import page_saved
+from signals import page_saved, pre_display
 
 """
     Markup classes
@@ -611,8 +611,9 @@ wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
 users = UserManager(app.config.get('CONTENT_DIR'))
 
 if app.config.get('USE_GIT', False):
-    from extensions._git import git_plugin
-    page_saved.connect(git_plugin)
+    from extensions._git import git_commit, git_rev
+    page_saved.connect(git_commit)
+    pre_display.connect(git_rev)
 
 
 @loginmanager.user_loader
@@ -645,8 +646,8 @@ def index():
 @protect
 def display(url):
     page = wiki.get_or_404(url)
+    pre_display.send(page, user=current_user)
     return render_template('page.html', page=page)
-
 
 @app.route('/create/', methods=['GET', 'POST'])
 @protect

@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, url_for, current_app
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
+import json
 
 
 gitplugin = Blueprint('gitplugin', __name__,
@@ -26,7 +27,8 @@ class GitManager(object):
             self.repository = Repo.init()
 
     def _get_blob_path(self, path):
-        return path.split(self.content_dir + os.path.sep)[1]   # remove "content/"
+        # remove "content/"
+        return path.split(self.content_dir + os.path.sep)[1]
 
     def _create_blob_for(self, path):
         repo = self.repository
@@ -56,6 +58,12 @@ class GitManager(object):
                                       path).split('\n')[0]
         page.footer = 'Last edition by %s' % log
 
+
+    def page_history(self, page):
+        path = self._get_blob_path(page.path)
+        format = """{\"commit\": \"%h\", \"author\": \"%an\", \"date\": \"%ad\", \"message\": \"%s\"}"""
+        history = self.repository.git.log('--format=%s' % format, path).split('\n')
+        return [json.loads(log) for log in history]
 
     def page_diff(self, page, old=None, new=None):
         path = self._get_blob_path(page.path)
@@ -103,6 +111,18 @@ def init_git(app):
 """
 
 
+@gitplugin.route('/diff/<path:url>/', methods=['GET', 'POST'])
+def diff(url):
+    page = current_app.wiki.get_or_404(url)
+    current_app.git.page_diff(page)
+    return render_template('history.html', page=page)
+
 @gitplugin.route('/history/<path:url>/', methods=['GET', 'POST'])
 def history(url):
-    return render_template('history.html', page=url)
+    page = current_app.wiki.get_or_404(url)
+    history = current_app.git.page_history(page)
+    return render_template('history.html', page=page, history=history)
+
+
+
+

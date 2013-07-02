@@ -607,7 +607,7 @@ loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
 markup = dict([(klass.NAME, klass) for klass in
                Markup.__subclasses__()])[app.config.get('MARKUP')]
-wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
+app.wiki = wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
 
 users = UserManager(app.config.get('CONTENT_DIR'))
 

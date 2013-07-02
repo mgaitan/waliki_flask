@@ -1,5 +1,6 @@
 import os
-from flask import Blueprint, render_template, current_app
+from flask import (Blueprint, render_template, current_app,
+                   request_finished, url_for)
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
@@ -96,6 +97,12 @@ def git_rev(page, **extra):
     current_app.git.last_rev(page)
 
 
+def extra_actions(page, **extra):
+    context = extra['extra_context']
+    actions = context.get('extra_actions', [])
+    actions.append(('History', url_for('gitplugin.history', url=page.url)))
+    context['extra_actions'] = actions
+
 """
     Views
     ~~~~~
@@ -126,4 +133,5 @@ def init(app):
     app.register_blueprint(gitplugin)
     app.signals.signal('page-saved').connect(git_commit)
     app.signals.signal('pre-display').connect(git_rev)
+    app.signals.signal('pre-display').connect(extra_actions)
     app.git = GitManager(app.config['CONTENT_DIR'])

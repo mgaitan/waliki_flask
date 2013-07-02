@@ -663,8 +663,9 @@ def index():
 @protect
 def display(url):
     page = wiki.get_or_404(url)
-    pre_display.send(page, user=current_user)
-    return render_template('page.html', page=page)
+    extra_context = {}
+    pre_display.send(page, user=current_user, extra_context=extra_context)
+    return render_template('page.html', page=page, **extra_context)
 
 
 @app.route('/create/', methods=['GET', 'POST'])

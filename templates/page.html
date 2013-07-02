@@ -40,6 +40,9 @@
 	<li><a href="{{ url_for('edit', url=page.url) }}">Edit</a></li>
   <li><a href="{{ url_for('move', url=page.url) }}">Move</a></li>
   <li><a href="#confirmDelete" data-toggle="modal" class="text-error">Delete</a></li>
+  {% for action, url in extra_actions %}
+    <li><a href="{{ url }}">{{ action }}</a></li>
+  {% endfor %}
 </ul>
 {% endblock sidebar %}
 

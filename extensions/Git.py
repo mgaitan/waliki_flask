@@ -1,19 +1,19 @@
 import os
-from flask import Blueprint, render_template, url_for, current_app
+from flask import Blueprint, render_template, current_app
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
 import json
 
 
-gitplugin = Blueprint('gitplugin', __name__,
-                       template_folder='templates')
+gitplugin = Blueprint('gitplugin', __name__, template_folder='templates')
 
 
 """
     Helpers
     ~~~~~~~
 """
+
 
 class GitManager(object):
     def __init__(self, content_dir):
@@ -56,12 +56,11 @@ class GitManager(object):
         path = self._get_blob_path(page.path)
         log = self.repository.git.log('--format=%an %ad', '--date=relative',
                                       path).split('\n')[0]
-        page.footer = 'Last edition by %s' % log
-
+        page.footer = u'Last edited by %s' % log.decode('utf-8')
 
     def page_history(self, page):
         path = self._get_blob_path(page.path)
-        format = """{\"commit\": \"%h\", \"author\": \"%an\", \"date\": \"%ad\", \"message\": \"%s\"}"""
+        format = """{\"commit\": \"%h\", \"author\": \"%an\", \"date\": \"%ad\", \"message\": \"%s\"}"""  # NOQA
         history = self.repository.git.log('--format=%s' % format, path).split('\n')
         return [json.loads(log) for log in history]
 
@@ -93,19 +92,6 @@ def git_rev(page, **extra):
 
 
 """
-    Initializer
-    ~~~~~~~~~~~
-"""
-
-
-def init_git(app):
-    app.register_blueprint(gitplugin)
-    app.signals.signal('page-saved').connect(git_commit)
-    app.signals.signal('pre-display').connect(git_rev)
-    app.git = GitManager(app.config['CONTENT_DIR'])
-
-
-"""
     Views
     ~~~~~
 """
@@ -117,6 +103,7 @@ def diff(url):
     current_app.git.page_diff(page)
     return render_template('history.html', page=page)
 
+
 @gitplugin.route('/history/<path:url>/', methods=['GET', 'POST'])
 def history(url):
     page = current_app.wiki.get_or_404(url)
@@ -124,5 +111,14 @@ def history(url):
     return render_template('history.html', page=page, history=history)
 
 
+"""
+    Initializer
+    ~~~~~~~~~~~
+"""
 
 
+def init(app):
+    app.register_blueprint(gitplugin)
+    app.signals.signal('page-saved').connect(git_commit)
+    app.signals.signal('pre-display').connect(git_rev)
+    app.git = GitManager(app.config['CONTENT_DIR'])

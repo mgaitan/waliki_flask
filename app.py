@@ -25,6 +25,7 @@ from signals import wiki_signals, page_saved, pre_display
     ~~~~~~~~~~~~~~
 """
 
+
 class Markup(object):
     """ Base markup class."""
     NAME = 'Text'
@@ -79,7 +80,6 @@ class Markdown(Markup):
         [markdown]: http://daringfireball.net/projects/markdown/
         [Wiki]: http://github.com/alexex/wiki
         """
-
 
     def process(self):
         # Processes Markdown text to HTML, returns original markdown text,
@@ -161,7 +161,6 @@ class RestructuredText(Markup):
         return (pub.writer.parts['fragment'], pub.document.reporter.max_level,
                 pub.settings.record_dependencies)
 
-
     def _parse_meta(self, lines):
         """ Parse Meta-Data. Taken from Python-Markdown"""
         META_RE = re.compile(r'^\.\.\s(?P<key>.*?): (?P<value>.*)')
@@ -184,6 +183,8 @@ class RestructuredText(Markup):
     Wiki classes
     ~~~~~~~~~~~~
 """
+
+
 class Page(object):
     def __init__(self, path, url, new=False, markup=Markdown):
         self.path = path
@@ -573,7 +574,7 @@ class SignupForm(Form):
     def validate_name(form, field):
         user = users.get_user(field.data)
         if user:
-           raise ValidationError('This username is already taken')
+            raise ValidationError('This username is already taken')
 
     def validate_password(form, field):
         if len(field.data) < 4:
@@ -622,6 +623,7 @@ def load_user(name):
     ~~~~~~
 """
 
+
 @app.route('/')
 @protect
 def home():
@@ -644,6 +646,7 @@ def display(url):
     page = wiki.get_or_404(url)
     pre_display.send(page, user=current_user)
     return render_template('page.html', page=page)
+
 
 @app.route('/create/', methods=['GET', 'POST'])
 @protect
@@ -776,9 +779,10 @@ def user_delete(user_id):
     pass
 
 
-if app.config.get('USE_GIT', False):
-    from extensions._git import init_git
-    init_git(app)
+# Load extensions
+for ext in app.config.get('EXTENSIONS', []):
+    mod = __import__('extensions.%s' % ext, fromlist=['init'])
+    mod.init(app)
 
 if __name__ == '__main__':
     manager.run()

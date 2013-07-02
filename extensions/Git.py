@@ -48,8 +48,8 @@ class GitManager(object):
         else:
             index.add([IndexEntry.from_blob(blob)])
         if user and user.is_authenticated():
-            os.environ['GIT_AUTHOR_NAME'] = user.data.get('full_name', user.name)
-            os.environ['GIT_AUTHOR_EMAIL'] = user.data.get('email', '')
+            os.environ['GIT_AUTHOR_NAME'] = user.data.get('full_name', user.name).encode('utf-8')
+            os.environ['GIT_AUTHOR_EMAIL'] = user.data.get('email', '').encode('utf-8')
         return index.commit(message)
 
     def last_rev(self, page):
@@ -60,7 +60,12 @@ class GitManager(object):
 
     def page_history(self, page):
         path = self._get_blob_path(page.path)
-        format = """{\"commit\": \"%h\", \"author\": \"%an\", \"date\": \"%ad\", \"message\": \"%s\"}"""  # NOQA
+        data = [("commit", "%h"),
+                ("author", "%an"),
+                ("date", "%ad"),
+                ("date_relative", "%ar"),
+                ("message", "%s")]
+        format = "{%s}" % ','.join([""" \"%s\": \"%s\" """ % item for item in data])
         history = self.repository.git.log('--format=%s' % format, path).split('\n')
         return [json.loads(log) for log in history]
 

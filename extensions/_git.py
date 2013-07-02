@@ -1,13 +1,21 @@
 import os
-
+from flask import Blueprint, render_template, url_for, current_app
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
 
 
-class GitPlugin(object):
+gitplugin = Blueprint('gitplugin', __name__,
+                       template_folder='templates')
 
-    def __init__(self, content_dir='content'):
+
+"""
+    Helpers
+    ~~~~~~~
+"""
+
+class GitManager(object):
+    def __init__(self, content_dir):
         self.content_dir = content_dir
         if os.path.isdir(os.path.join(content_dir, '.git')):
             self.repository = Repo(content_dir, odbt=GitDB)
@@ -47,7 +55,7 @@ class GitPlugin(object):
         log = self.repository.git.log('--format=%an %ad', '--date=relative',
                                       path).split('\n')[0]
         page.footer = 'Last edition by %s' % log
-        self.page_diff(page)
+
 
     def page_diff(self, page, old=None, new=None):
         path = self._get_blob_path(page.path)
@@ -62,12 +70,39 @@ class GitPlugin(object):
         page.old_content = self.repository.git.show('%s:%s' % (old, path)) if old else ''
         page.new_content = self.repository.git.show('%s:%s' % (new, path))
 
+"""
+    Receivers
+    ~~~~~~~~~
+"""
+
 
 def git_commit(page, **extra):
-    gitp = GitPlugin()
-    gitp.commit(page, extra['user'], extra['message'])
+    current_app.git.commit(page, extra['user'], extra['message'])
 
 
 def git_rev(page, **extra):
-    gitp = GitPlugin()
-    gitp.last_rev(page)
+    current_app.git.last_rev(page)
+
+
+"""
+    Initializer
+    ~~~~~~~~~~~
+"""
+
+
+def init_git(app):
+    app.register_blueprint(gitplugin)
+    app.signals.signal('page-saved').connect(git_commit)
+    app.signals.signal('pre-display').connect(git_rev)
+    app.git = GitManager(app.config['CONTENT_DIR'])
+
+
+"""
+    Views
+    ~~~~~
+"""
+
+
+@gitplugin.route('/history/<path:url>/', methods=['GET', 'POST'])
+def history(url):
+    return render_template('history.html', page=url)

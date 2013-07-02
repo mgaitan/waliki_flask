@@ -18,7 +18,7 @@ from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from extensions.cache import cache
-from signals import page_saved, pre_display
+from signals import wiki_signals, page_saved, pre_display
 
 """
     Markup classes
@@ -586,6 +586,7 @@ class SignupForm(Form):
 """
 
 app = Flask(__name__)
+app.signals = wiki_signals
 app.debug = True
 app.config['CONTENT_DIR'] = 'content'
 app.config['TITLE'] = 'wiki'
@@ -609,11 +610,6 @@ markup = dict([(klass.NAME, klass) for klass in
 wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
 
 users = UserManager(app.config.get('CONTENT_DIR'))
-
-if app.config.get('USE_GIT', False):
-    from extensions._git import git_commit, git_rev
-    page_saved.connect(git_commit)
-    pre_display.connect(git_rev)
 
 
 @loginmanager.user_loader
@@ -778,6 +774,11 @@ def user_admin(user_id):
 @app.route('/user/delete/<int:user_id>/')
 def user_delete(user_id):
     pass
+
+
+if app.config.get('USE_GIT', False):
+    from extensions._git import init_git
+    init_git(app)
 
 if __name__ == '__main__':
     manager.run()

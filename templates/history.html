@@ -4,7 +4,21 @@
     {{ page.title }}
 {% endblock title %}
 
-{% block content %}
+{% block container %}
+<div class="row">
+<div class="span10 offset1">
+
+    <div class="page-header">
+
+<div class="pull-right"><a href="/{{ page.url }}" class="btn btn-small">
+    <i class="icon-arrow-left"></i> Back to page</a></div>
+
+        <h3 id="top">History of {{ page.title }}</h3>
+    </div>
+
+
+<form>
+<button type="submit" class="btn btn-small">Compare revisions</button>
 <table class="table table-striped">
               <thead>
                 <tr>
@@ -25,6 +39,11 @@
             {% endfor %}
             </tbody>
         </table>
-
-
+</form>
+{% if history|count() > 10  %}
+    <button type="submit" class="btn btn-small">Compare revisions</button>
+    <a class="btn btn-small" href="#top"><i class="icon-chevron-up"></i>Back to top</a>
+{% endif %}
+</div>
+</div>
 {% endblock %}

@@ -19,7 +19,8 @@ but found nothing, I just wrote this down. I hope that it might help others ,too
 	* sync with dropbox
 	* and many more
 * Public or login required modes (New users can sign up) 
-* Experimental git tracked content (set `USE_GIT=True`. Require `GitPython`) 
+* Fully extensible!  Just put your module in `extensions/` and add it to `EXTENSIONS` config var
+    * Git extension: version control for your content.  (`EXTENSIONS = ['Git']`  )
 * Easily themable
 
 ### Planned

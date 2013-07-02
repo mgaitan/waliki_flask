@@ -18,17 +18,13 @@
 
 
 <form>
-<button type="submit" class="btn btn-small">Compare revisions</button>
+<div class="control-group">
+    <button type="submit" class="btn btn-small">Compare revisions</button>
+</div>
+
 <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Author</th>
-                  <th>Date</th>
-                  <th>Message</th>
-                </tr>
-              </thead>
-              <tbody>
+
+        <tbody>
             {% for version in history %}
                 <tr>
                   <td><input type="checkbox" value="{{ version.commit }}" ></td>
@@ -39,11 +35,14 @@
             {% endfor %}
             </tbody>
         </table>
-</form>
-{% if history|count() > 10  %}
+{% if history|count() > 10 %}
+
+<div class="control-group">
     <button type="submit" class="btn btn-small">Compare revisions</button>
     <a class="btn btn-small" href="#top"><i class="icon-chevron-up"></i>Back to top</a>
+</div>
 {% endif %}
+</form>
 </div>
 </div>
 {% endblock %}

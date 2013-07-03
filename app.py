@@ -663,8 +663,11 @@ def index():
 @app.route('/<path:url>/')
 @protect
 def display(url):
-    page = wiki.get_or_404(url)
-    return render_template('page.html', page=page)
+    page = wiki.get(url)
+    if page:
+        return render_template('page.html', page=page)
+    flash('The page "{0}" does not exist, feel free to make it now!'.format((url)), 'warning')
+    return redirect(url_for('edit', url=urlify(url)))
 
 
 @app.route('/create/', methods=['GET', 'POST'])

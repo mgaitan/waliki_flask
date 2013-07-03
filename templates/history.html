@@ -10,8 +10,12 @@
 
     <div class="page-header">
 
-<div class="pull-right"><a href="/{{ page.url }}" class="btn btn-small">
-    <i class="icon-arrow-left"></i> Back to page</a></div>
+<div class="pull-right">
+    <a href="/{{ page.url }}" class="btn btn-small"><i class="icon-arrow-left"></i>Back to page</a>
+
+    <a href="{{ url_for('edit', url=page.url) }}" class="btn btn-small">Edit</a>
+
+</div>
 
         <h3 id="top">History of {{ page.title }}</h3>
     </div>

@@ -125,7 +125,7 @@ def extra_actions(page, **extra):
 @gitplugin.route('/diff/<path:url>/<new>..<old>', methods=['GET', 'POST'])
 def diff(url, new, old):
     page = current_app.wiki.get_or_404(url)
-    current_app.git.page_diff(page, new, old)
+    current_app.git.page_diff(page, old, new)
     return render_template('diff.html', page=page,
                            new_commit=new,
                            old_commit=old)

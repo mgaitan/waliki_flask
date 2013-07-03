@@ -1,0 +1,22 @@
+.monospace {
+
+  padding: 0 3px 2px;
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 12px;
+
+}
+
+span.ins, span.del {
+    padding: 3px;
+
+}
+
+span.ins {
+    font-weight: bold;
+    background:#B4E2B4;
+}
+
+span.del {
+    text-decoration: line-through;
+    background:#E9AEAE;
+}

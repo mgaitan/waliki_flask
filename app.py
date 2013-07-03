@@ -68,8 +68,8 @@ class Markdown(Markup):
 
         `**bold** and *italics*` turn into **bold** and *italics*. Very easy!
 
-        Create links with `[Wiki](http://github.com/alexex/wiki)`. They turn into
-        [Wiki][].
+        Create links with `[Wiki](http://github.com/alexex/wiki)`.
+        They turn into [Wiki][http://github.com/alexex/wiki].
 
         Headers are as follows:
 
@@ -78,7 +78,6 @@ class Markdown(Markup):
             ### Level 3
 
         [markdown]: http://daringfireball.net/projects/markdown/
-        [Wiki]: http://github.com/alexex/wiki
         """
 
     def process(self):
@@ -110,10 +109,11 @@ class RestructuredText(Markup):
 
         ``**bold** and *italics*`` turn into **bold** and *italics*. Very easy!
 
-        Create links with ```Wiki <http://github.com/alexex/wiki>`_``. They turn into
-        `Wiki <https://github.com/alexex/wiki>`_.
+        Create links with ```Wiki <http://github.com/alexex/wiki>`_``.
+        They turn into `Wiki <https://github.com/alexex/wiki>`_.
 
-        Headers are just any underline (and, optionally, overline). For example::
+        Headers are just any underline (and, optionally, overline).
+        For example::
 
             Level 1
             *******
@@ -135,7 +135,8 @@ class RestructuredText(Markup):
                     'syntax_highlight': 'short',
                     }
 
-        html, _, _ = self._rst2html(self.raw_content, settings_overrides=settings)
+        html, _, _ = self._rst2html(self.raw_content,
+                                    settings_overrides=settings)
 
         # Convert unknow links to internal wiki links.
         # Examples:
@@ -151,10 +152,12 @@ class RestructuredText(Markup):
         return html, body, meta
 
     def get_autolinks(self, refs):
-        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref)) for ref in refs])
+        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref))
+                               for ref in refs])
         return '\n\n' + autolinks
 
-    def _rst2html(self, source, source_path=None, source_class=docutils.io.StringInput,
+    def _rst2html(self, source, source_path=None,
+                  source_class=docutils.io.StringInput,
                   destination_path=None, reader=None, reader_name='standalone',
                   parser=None, parser_name='restructuredtext', writer=None,
                   writer_name='html', settings=None, settings_spec=None,
@@ -257,7 +260,8 @@ class Page(object):
         return self.html
 
     def delete_cache(self):
-        cache.delete(self.__html__.make_cache_key(self.__html__.uncached, self))
+        cache.delete(self.__html__.make_cache_key(self.__html__.uncached,
+                                                  self))
 
     @property
     def title(self):
@@ -389,7 +393,6 @@ class Wiki(object):
     User classes & helpers
     ~~~~~~~~~~~~~~~~~~~~~~
 """
-
 
 
 class UserManager(object):
@@ -556,6 +559,7 @@ class URLForm(Form):
     def clean_url(self, url):
         return urlify(url)
 
+
 class SearchForm(Form):
     term = TextField('', [Required()])
 
@@ -619,7 +623,8 @@ except IOError:
     print ("Startup Failure: You need to place a "
            "config.py in your content directory.")
 CACHE_DIR = os.path.join(app.config.get('CONTENT_DIR'), 'cache')
-cache.init_app(app, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': CACHE_DIR})
+cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
+                            'CACHE_DIR': CACHE_DIR})
 manager = Manager(app)
 
 loginmanager = LoginManager()
@@ -662,7 +667,11 @@ def index():
 @app.route('/<path:url>/')
 @protect
 def display(url):
-    page = wiki.get_or_404(url)
+    page = wiki.get(url)
+    if not page:
+        flash('The page "{0}" does not exist, '
+              'feel free to make it now!'.format((url)), 'warning')
+        return redirect(url_for('edit', url=urlify(url)))
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
     return render_template('page.html', page=page, **extra_context)

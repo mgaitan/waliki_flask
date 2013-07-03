@@ -31,6 +31,13 @@
                   <td>{{ version.author }}</td>
                   <td>{{ version.date_relative }}</td>
                   <td>{{ version.message }}</td>
+                  <td>
+                    <div class="progress">
+                        <div class="bar bar-success" style="width: {{ (version.insertion / max_changes) * 100 }}%;"></div>
+                        <div class="bar bar-danger" style="width: {{ (version.deletion / max_changes) * 100 }}%;"></div>
+                    </div>
+                   </td>
+
                 </tr>
             {% endfor %}
             </tbody>

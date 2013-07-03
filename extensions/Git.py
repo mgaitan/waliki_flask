@@ -1,4 +1,5 @@
 import os
+import re
 from flask import (Blueprint, render_template, current_app,
                    request_finished, url_for)
 from git import *
@@ -67,8 +68,20 @@ class GitManager(object):
                 ("date_relative", "%ar"),
                 ("message", "%s")]
         format = "{%s}" % ','.join([""" \"%s\": \"%s\" """ % item for item in data])
-        history = self.repository.git.log('--format=%s' % format, path).split('\n')
-        return [json.loads(log) for log in history]
+        output = self.repository.git.log('--format=%s' % format,
+                                         '-z',
+                                         '--shortstat', path)
+        output = output.replace('\x00', '').split('\n')
+        history = []
+        for line in output:
+            if line.startswith('{'):
+                history.append(json.loads(line))
+            else:
+                insertion = re.match(r'.* (\d+) insertion', line)
+                deletion = re.match(r'.* (\d+) deletion', line)
+                history[-1]['insertion'] = int(insertion.group(1)) if insertion else 0
+                history[-1]['deletion'] = int(deletion.group(1)) if deletion else 0
+        return history
 
     def page_diff(self, page, old=None, new=None):
         path = self._get_blob_path(page.path)
@@ -120,7 +133,9 @@ def diff(url):
 def history(url):
     page = current_app.wiki.get_or_404(url)
     history = current_app.git.page_history(page)
-    return render_template('history.html', page=page, history=history)
+    max_changes = max([(v['insertion'] + v['deletion']) for v in history])
+    return render_template('history.html', page=page, history=history,
+                           max_changes=max_changes)
 
 
 """

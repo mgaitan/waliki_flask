@@ -1,7 +1,7 @@
 import os
 import re
 from flask import (Blueprint, render_template, current_app,
-                   request_finished, url_for)
+                   request, url_for, redirect)
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
@@ -93,8 +93,8 @@ class GitManager(object):
                 pass
         if new is None:
             new = history[0]
-        page.old_content = self.repository.git.show('%s:%s' % (old, path)) if old else ''
-        page.new_content = self.repository.git.show('%s:%s' % (new, path))
+        page.new = self.repository.git.show('%s:%s' % (new, path)) if new else ''
+        page.old = self.repository.git.show('%s:%s' % (old, path)) if old else ''
 
 """
     Receivers
@@ -122,16 +122,22 @@ def extra_actions(page, **extra):
 """
 
 
-@gitplugin.route('/diff/<path:url>/', methods=['GET', 'POST'])
-def diff(url):
+@gitplugin.route('/diff/<path:url>/<new>..<old>', methods=['GET', 'POST'])
+def diff(url, new, old):
     page = current_app.wiki.get_or_404(url)
-    current_app.git.page_diff(page)
-    return render_template('history.html', page=page)
+    current_app.git.page_diff(page, new, old)
+    return render_template('diff.html', page=page,
+                           new_commit=new,
+                           old_commit=old)
 
 
 @gitplugin.route('/history/<path:url>/', methods=['GET', 'POST'])
 def history(url):
     page = current_app.wiki.get_or_404(url)
+    if request.method == 'POST':
+        new, old = request.form.getlist('commit')
+        return redirect(url_for('gitplugin.diff',
+                                url=page.url, new=new, old=old))
     history = current_app.git.page_history(page)
     max_changes = max([(v['insertion'] + v['deletion']) for v in history])
     return render_template('history.html', page=page, history=history,

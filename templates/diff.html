@@ -1,0 +1,26 @@
+{% extends "history.html" %}
+
+
+{% block container %}
+
+<div class="alert alert-error">Errors occured verifying your input. Please check the marked fields below.</div>
+
+{{ super() }}
+
+{% endblock %}
+
+
+{% block postscripts %}
+var $commits = $("input:checkbox[name=commit]");
+$commits.on("change", function() {
+    if($commits.filter(":checked").length >= 2) {
+        $('button[type="submit"]').removeAttr("disabled").removeClass('disabled');
+        $commits.not(":checked").attr("disabled","disabled").addClass("disabled");
+    }
+    else {
+        $('button[type="submit"]').attr("disabled","disabled").addClass("disabled");
+        $commits.removeAttr("disabled").removeClass('disabled');
+
+    }
+});
+{% endblock postscripts %}

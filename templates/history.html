@@ -31,7 +31,7 @@
         <tbody>
             {% for version in history %}
                 <tr>
-                  <td><input type="checkbox" value="{{ version.commit }}" ></td>
+                  <td><input name="commit" type="checkbox" value="{{ version.commit }}" ></td>
                   <td>{{ version.author }}</td>
                   <td>{{ version.date_relative }}</td>
                   <td>{{ version.message }}</td>
@@ -57,3 +57,16 @@
 </div>
 </div>
 {% endblock %}
+
+
+{% block postscripts %}
+var $commits = $("input:checkbox[name=commit]");
+$commits.on("change", function() {
+    if($commits.filter(":checked").length >= 2) {
+        $commits.not(":checked").attr("disabled","disabled");
+    }
+    else {
+        $commits.removeAttr("disabled");
+    }
+});
+{% endblock postscripts %}

@@ -122,7 +122,7 @@ def extra_actions(page, **extra):
 """
 
 
-@gitplugin.route('/diff/<path:url>/<new>..<old>', methods=['GET', 'POST'])
+@gitplugin.route('/<path:url>/_diff/<new>..<old>', methods=['GET', 'POST'])
 def diff(url, new, old):
     page = current_app.wiki.get_or_404(url)
     current_app.git.page_diff(page, old, new)
@@ -131,7 +131,7 @@ def diff(url, new, old):
                            old_commit=old)
 
 
-@gitplugin.route('/history/<path:url>/', methods=['GET', 'POST'])
+@gitplugin.route('/<path:url>/_history', methods=['GET', 'POST'])
 def history(url):
     page = current_app.wiki.get_or_404(url)
     if request.method == 'POST':

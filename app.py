@@ -152,7 +152,7 @@ class RestructuredText(Markup):
         return html, body, meta
 
     def get_autolinks(self, refs):
-        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref))
+        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref, False))
                                for ref in refs])
         return '\n\n' + autolinks
 
@@ -538,15 +538,17 @@ def protect(f):
 """
 
 
-def urlify(url):
+def urlify(url, protect_specials_url=True):
     # Cleans the url and corrects various errors.
     # Remove multiple spaces and leading and trailing spaces
-    pageStub = re.sub('[ ]{2,}', ' ', url).strip()
-    # Changes spaces to underscores and make everything lowercase
-    pageStub = pageStub.lower().replace(' ', '_')
+    if (protect_specials_url and
+            re.match(r'^(?i)[user|tag|create|search|index]', url)):
+        url = '-' + url
+    pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
+    pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')
     # Corrects Windows style folders
-    pageStub = pageStub.replace('\\\\', '/').replace('\\', '/')
-    return pageStub
+    pretty_url = pretty_url.replace('\\\\', '/').replace('\\', '/')
+    return pretty_url
 
 
 class URLForm(Form):
@@ -686,7 +688,7 @@ def create():
     return render_template('create.html', form=form)
 
 
-@app.route('/edit/<path:url>/', methods=['GET', 'POST'])
+@app.route('/<path:url>/_edit', methods=['GET', 'POST'])
 @protect
 def edit(url):
     page = wiki.get(url)
@@ -715,7 +717,7 @@ def preview():
     return data['html']
 
 
-@app.route('/move/<path:url>/', methods=['GET', 'POST'])
+@app.route('/<path:url>/_move', methods=['GET', 'POST'])
 @protect
 def move(url):
     page = wiki.get_or_404(url)
@@ -727,7 +729,7 @@ def move(url):
     return render_template('move.html', form=form, page=page)
 
 
-@app.route('/delete/<path:url>/')
+@app.route('/<path:url>/_delete')
 @protect
 def delete(url):
     page = wiki.get_or_404(url)

@@ -228,7 +228,8 @@ class Page(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         with open(self.path, 'w') as f:
-            for key, value in self._meta.items():
+            for key in sorted(self._meta.keys()):
+                value = self._meta[key]
                 line = self.markup.META_LINE % (key, value)
                 f.write(line.encode('utf-8'))
             f.write('\n'.encode('utf-8'))

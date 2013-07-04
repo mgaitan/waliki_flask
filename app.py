@@ -151,7 +151,6 @@ class RestructuredText(Markup):
         if refs:
             content = self.raw_content + self.get_autolinks(refs)
             html, _, _ = self._rst2html(content, settings_overrides=settings)
-        import ipdb; ipdb.set_trace()
         meta_lines, body = self.raw_content.split('\n\n', 1)
         meta = self._parse_meta(meta_lines.split('\n'))
         return html, body, meta

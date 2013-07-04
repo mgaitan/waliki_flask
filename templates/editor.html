@@ -4,6 +4,13 @@
 <h3>Wiki editor</h3>
 {%- endblock title %}
 
+{% block actions %}
+    <div class="btn-group">
+        <button class="btn" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
+    </div>
+{% endblock %}
+
+
 {% block content %}
 
 <div class="row">
@@ -53,14 +60,23 @@
 </div>
 
 
+
+<div id="howto" class="modal hide fade" aria-hidden="true">
+    <div class="modal-header">
+      <h3>Editor How-To</h3>
+    </div>
+    <div class="modal-body">
+        {{ markup.howto()|safe }}
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Ok, got it</a>
+    </div>
+  </div>
+
+
 {% endblock content %}
 
 
-<div class="span3">
-<h3>Editor How-To</h3>
-{{ markup.howto()|safe }}
-<p></p>
-</div>
 {% block postscripts -%}
 {{ super() }}
 $('#previewlink').on('click', function() {

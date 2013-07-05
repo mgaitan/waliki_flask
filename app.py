@@ -619,7 +619,7 @@ class SignupForm(Form):
 
 app = Flask(__name__)
 app.debug = True
-app.config['CONTENT_DIR'] = 'content'
+app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
 try:
@@ -629,6 +629,7 @@ try:
 except IOError:
     print ("Startup Failure: You need to place a "
            "config.py in your content directory.")
+
 CACHE_DIR = os.path.join(app.config.get('CONTENT_DIR'), 'cache')
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
                             'CACHE_DIR': CACHE_DIR})

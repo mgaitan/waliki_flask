@@ -84,8 +84,9 @@
 {% endblock sidebar %}
 
 {% block postscripts %}
-{% raw %}
-$(function(){
+
+function bootstrap_rst(){
+
    $('div.note').prepend('<i class="icon-info-sign icon-2x"></i>');
    $('div.tip').prepend('<i class="icon-ok icon-2x"></i>');
    $('div.warning, div.caution').prepend('<i class="icon-warning-sign icon-2x"></i>');
@@ -93,6 +94,12 @@ $(function(){
    $('div.error').prepend('<i class="icon-remove-sign icon-2x"></i>');
    $('div.danger').prepend('<i class="icon-bolt icon-2x"></i>');
    $('div.hint').prepend('<i class="icon-magic icon-2x"></i>');
+
+   $('table.docutils').removeClass('docutils').addClass('table table-bordered table-striped');
+
+}
+
+$(function(){
+    bootstrap_rst()
 });
-{% endraw %}
 {% endblock %}

@@ -92,7 +92,7 @@ $('#previewlink').on('click', function() {
     data: { body: bodycontent },
     success: function(msg) {
       $pre.html(msg);
-      console.log(msg);
+      bootstrap_rst();
     },
     error: function() {
 			$pre.addClass('alert').addClass('alert-error');

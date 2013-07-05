@@ -217,9 +217,11 @@ class Page(object):
             self.load()
             self.render()
 
-    def load(self):
-        with open(self.path, 'rU') as f:
-            self.content = self.markup(f.read().decode('utf-8'))
+    def load(self, content=None):
+        if not content:
+            with open(self.path, 'rU') as f:
+                content = f.read().decode('utf-8')
+        self.content = self.markup(content)
 
     def render(self):
         self._html, self.body, self._meta = self.content.process()
@@ -250,7 +252,6 @@ class Page(object):
         item = self._meta[name]
         if len(item) == 1:
             return item[0]
-        print item
         return item
 
     def __setitem__(self, name, value):
@@ -617,7 +618,6 @@ class SignupForm(Form):
 """
 
 app = Flask(__name__)
-app.signals = wiki_signals
 app.debug = True
 app.config['CONTENT_DIR'] = 'content'
 app.config['TITLE'] = 'wiki'
@@ -639,7 +639,16 @@ loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
 markup = dict([(klass.NAME, klass) for klass in
                Markup.__subclasses__()])[app.config.get('MARKUP')]
-app.wiki = wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
+
+wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
+
+# FIX ME: This monkeypatching is pollution crap .
+#         Should be possible to import them wherever,
+#         Wiki class should be a singleton.
+app.wiki = wiki
+app.signals = wiki_signals
+app.EditorForm = EditorForm
+
 
 users = UserManager(app.config.get('CONTENT_DIR'))
 
@@ -689,7 +698,7 @@ def display(url):
 def create():
     form = URLForm()
     if form.validate_on_submit():
-        return redirect(url_for('edit', url=form.clean_url(form.url.data)))
+        return redirect(url_for('edit', url=urlify(form.url.data)))
     return render_template('create.html', form=form)
 
 

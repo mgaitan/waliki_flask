@@ -1,7 +1,7 @@
 import os
 import re
 from flask import (Blueprint, render_template, current_app,
-                   request, url_for, redirect)
+                   request, url_for, redirect, abort)
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
@@ -83,6 +83,13 @@ class GitManager(object):
                 history[-1]['deletion'] = int(deletion.group(1)) if deletion else 0
         return history
 
+    def page_version(self, page, version):
+        path = self._get_blob_path(page.path)
+        try:
+            return self.repository.git.show('%s:%s' % (version, path))
+        except GitCommandError:
+            return ''
+
     def page_diff(self, page, old=None, new=None):
         path = self._get_blob_path(page.path)
         history = self.repository.git.log('--format=%h', path).split('\n')
@@ -93,8 +100,8 @@ class GitManager(object):
                 pass
         if new is None:
             new = history[0]
-        page.new = self.repository.git.show('%s:%s' % (new, path)) if new else ''
-        page.old = self.repository.git.show('%s:%s' % (old, path)) if old else ''
+        page.new = self.page_version(page, new)
+        page.old = self.page_version(page, old)
 
 """
     Receivers
@@ -120,6 +127,22 @@ def extra_actions(page, **extra):
     Views
     ~~~~~
 """
+
+
+
+@gitplugin.route('/<path:url>/_version/<version>')
+def version(url, version):
+    page = current_app.wiki.get_or_404(url)
+    content = current_app.git.page_version(page, version)
+    if not content:
+        abort(404)
+    page.delete_cache()
+    page.load(content.decode('utf-8'))
+    page.render()
+    form = current_app.EditorForm(obj=page)
+    form.message.data = 'Restored version @%s' % version
+    return render_template('page_version.html', page=page,
+                           version=version, form=form)
 
 
 @gitplugin.route('/<path:url>/_diff/<new>..<old>', methods=['GET', 'POST'])

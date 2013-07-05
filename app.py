@@ -548,7 +548,7 @@ def urlify(url, protect_specials_url=True):
     # Cleans the url and corrects various errors.
     # Remove multiple spaces and leading and trailing spaces
     if (protect_specials_url and
-            re.match(r'^(?i)[user|tag|create|search|index]', url)):
+            re.match(r'^(?i)(user|tag|create|search|index)', url)):
         url = '-' + url
     pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
     pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')

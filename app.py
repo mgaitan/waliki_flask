@@ -18,12 +18,13 @@ from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from extensions.cache import cache
-from signals import page_saved
+from signals import wiki_signals, page_saved, pre_display
 
 """
     Markup classes
     ~~~~~~~~~~~~~~
 """
+
 
 class Markup(object):
     """ Base markup class."""
@@ -34,6 +35,10 @@ class Markup(object):
 
     def __init__(self, raw_content):
         self.raw_content = raw_content
+
+    @classmethod
+    def render_meta(cls, key, value):
+        return cls.META_LINE % (key, value)
 
     def process(self):
         """
@@ -67,8 +72,8 @@ class Markdown(Markup):
 
         `**bold** and *italics*` turn into **bold** and *italics*. Very easy!
 
-        Create links with `[Wiki](http://github.com/alexex/wiki)`. They turn into
-        [Wiki][].
+        Create links with `[Wiki](http://github.com/alexex/wiki)`.
+        They turn into [Wiki][http://github.com/alexex/wiki].
 
         Headers are as follows:
 
@@ -77,9 +82,7 @@ class Markdown(Markup):
             ### Level 3
 
         [markdown]: http://daringfireball.net/projects/markdown/
-        [Wiki]: http://github.com/alexex/wiki
         """
-
 
     def process(self):
         # Processes Markdown text to HTML, returns original markdown text,
@@ -110,10 +113,11 @@ class RestructuredText(Markup):
 
         ``**bold** and *italics*`` turn into **bold** and *italics*. Very easy!
 
-        Create links with ```Wiki <http://github.com/alexex/wiki>`_``. They turn into
-        `Wiki <https://github.com/alexex/wiki>`_.
+        Create links with ```Wiki <http://github.com/alexex/wiki>`_``.
+        They turn into `Wiki <https://github.com/alexex/wiki>`_.
 
-        Headers are just any underline (and, optionally, overline). For example::
+        Headers are just any underline (and, optionally, overline).
+        For example::
 
             Level 1
             *******
@@ -135,7 +139,8 @@ class RestructuredText(Markup):
                     'syntax_highlight': 'short',
                     }
 
-        html, _, _ = self._rst2html(self.raw_content, settings_overrides=settings)
+        html, _, _ = self._rst2html(self.raw_content,
+                                    settings_overrides=settings)
 
         # Convert unknow links to internal wiki links.
         # Examples:
@@ -151,10 +156,12 @@ class RestructuredText(Markup):
         return html, body, meta
 
     def get_autolinks(self, refs):
-        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref)) for ref in refs])
+        autolinks = '\n'.join(['.. _%s: /%s' % (ref, urlify(ref, False))
+                               for ref in refs])
         return '\n\n' + autolinks
 
-    def _rst2html(self, source, source_path=None, source_class=docutils.io.StringInput,
+    def _rst2html(self, source, source_path=None,
+                  source_class=docutils.io.StringInput,
                   destination_path=None, reader=None, reader_name='standalone',
                   parser=None, parser_name='restructuredtext', writer=None,
                   writer_name='html', settings=None, settings_spec=None,
@@ -175,7 +182,6 @@ class RestructuredText(Markup):
             enable_exit_status=enable_exit_status)
         return (pub.writer.parts['fragment'], pub.document.reporter.max_level,
                 pub.settings.record_dependencies)
-
 
     def _parse_meta(self, lines):
         """ Parse Meta-Data. Taken from Python-Markdown"""
@@ -199,6 +205,8 @@ class RestructuredText(Markup):
     Wiki classes
     ~~~~~~~~~~~~
 """
+
+
 class Page(object):
     def __init__(self, path, url, new=False, markup=Markdown):
         self.path = path
@@ -209,9 +217,11 @@ class Page(object):
             self.load()
             self.render()
 
-    def load(self):
-        with open(self.path, 'rU') as f:
-            self.content = self.markup(f.read().decode('utf-8'))
+    def load(self, content=None):
+        if not content:
+            with open(self.path, 'rU') as f:
+                content = f.read().decode('utf-8')
+        self.content = self.markup(content)
 
     def render(self):
         self._html, self.body, self._meta = self.content.process()
@@ -224,7 +234,8 @@ class Page(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         with open(self.path, 'w') as f:
-            for key, value in self._meta.items():
+            for key in sorted(self._meta.keys()):
+                value = self._meta[key]
                 line = self.markup.META_LINE % (key, value)
                 f.write(line.encode('utf-8'))
             f.write('\n'.encode('utf-8'))
@@ -241,7 +252,6 @@ class Page(object):
         item = self._meta[name]
         if len(item) == 1:
             return item[0]
-        print item
         return item
 
     def __setitem__(self, name, value):
@@ -256,7 +266,8 @@ class Page(object):
         return self.html
 
     def delete_cache(self):
-        cache.delete(self.__html__.make_cache_key(self.__html__.uncached, self))
+        cache.delete(self.__html__.make_cache_key(self.__html__.uncached,
+                                                  self))
 
     @property
     def title(self):
@@ -388,7 +399,6 @@ class Wiki(object):
     User classes & helpers
     ~~~~~~~~~~~~~~~~~~~~~~
 """
-
 
 
 class UserManager(object):
@@ -534,15 +544,17 @@ def protect(f):
 """
 
 
-def urlify(url):
+def urlify(url, protect_specials_url=True):
     # Cleans the url and corrects various errors.
     # Remove multiple spaces and leading and trailing spaces
-    pageStub = re.sub('[ ]{2,}', ' ', url).strip()
-    # Changes spaces to underscores and make everything lowercase
-    pageStub = pageStub.lower().replace(' ', '_')
+    if (protect_specials_url and
+            re.match(r'^(?i)[user|tag|create|search|index]', url)):
+        url = '-' + url
+    pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
+    pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')
     # Corrects Windows style folders
-    pageStub = pageStub.replace('\\\\', '/').replace('\\', '/')
-    return pageStub
+    pretty_url = pretty_url.replace('\\\\', '/').replace('\\', '/')
+    return pretty_url
 
 
 class URLForm(Form):
@@ -554,6 +566,7 @@ class URLForm(Form):
 
     def clean_url(self, url):
         return urlify(url)
+
 
 class SearchForm(Form):
     term = TextField('', [Required()])
@@ -592,7 +605,7 @@ class SignupForm(Form):
     def validate_name(form, field):
         user = users.get_user(field.data)
         if user:
-           raise ValidationError('This username is already taken')
+            raise ValidationError('This username is already taken')
 
     def validate_password(form, field):
         if len(field.data) < 4:
@@ -617,7 +630,8 @@ except IOError:
     print ("Startup Failure: You need to place a "
            "config.py in your content directory.")
 CACHE_DIR = os.path.join(app.config.get('CONTENT_DIR'), 'cache')
-cache.init_app(app, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': CACHE_DIR})
+cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
+                            'CACHE_DIR': CACHE_DIR})
 manager = Manager(app)
 
 loginmanager = LoginManager()
@@ -625,13 +639,18 @@ loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
 markup = dict([(klass.NAME, klass) for klass in
                Markup.__subclasses__()])[app.config.get('MARKUP')]
+
 wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
 
-users = UserManager(app.config.get('CONTENT_DIR'))
+# FIX ME: This monkeypatching is pollution crap .
+#         Should be possible to import them wherever,
+#         Wiki class should be a singleton.
+app.wiki = wiki
+app.signals = wiki_signals
+app.EditorForm = EditorForm
 
-if app.config.get('USE_GIT', False):
-    from extensions._git import git_plugin
-    page_saved.connect(git_plugin)
+
+users = UserManager(app.config.get('CONTENT_DIR'))
 
 
 @loginmanager.user_loader
@@ -643,6 +662,7 @@ def load_user(name):
     Routes
     ~~~~~~
 """
+
 
 @app.route('/')
 @protect
@@ -663,8 +683,14 @@ def index():
 @app.route('/<path:url>/')
 @protect
 def display(url):
-    page = wiki.get_or_404(url)
-    return render_template('page.html', page=page)
+    page = wiki.get(url)
+    if not page:
+        flash('The page "{0}" does not exist, '
+              'feel free to make it now!'.format((url)), 'warning')
+        return redirect(url_for('edit', url=urlify(url)))
+    extra_context = {}
+    pre_display.send(page, user=current_user, extra_context=extra_context)
+    return render_template('page.html', page=page, **extra_context)
 
 
 @app.route('/create/', methods=['GET', 'POST'])
@@ -672,11 +698,11 @@ def display(url):
 def create():
     form = URLForm()
     if form.validate_on_submit():
-        return redirect(url_for('edit', url=form.clean_url(form.url.data)))
+        return redirect(url_for('edit', url=urlify(form.url.data)))
     return render_template('create.html', form=form)
 
 
-@app.route('/edit/<path:url>/', methods=['GET', 'POST'])
+@app.route('/<path:url>/_edit', methods=['GET', 'POST'])
 @protect
 def edit(url):
     page = wiki.get(url)
@@ -687,7 +713,9 @@ def edit(url):
         form.populate_obj(page)
         page.save()
         page.delete_cache()
-        page_saved.send(page, message=form.message.data.encode('utf-8'))
+        page_saved.send(page,
+                        user=current_user,
+                        message=form.message.data.encode('utf-8'))
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
     return render_template('editor.html', form=form, page=page,
@@ -703,7 +731,7 @@ def preview():
     return data['html']
 
 
-@app.route('/move/<path:url>/', methods=['GET', 'POST'])
+@app.route('/<path:url>/_move', methods=['GET', 'POST'])
 @protect
 def move(url):
     page = wiki.get_or_404(url)
@@ -715,7 +743,7 @@ def move(url):
     return render_template('move.html', form=form, page=page)
 
 
-@app.route('/delete/<path:url>/')
+@app.route('/<path:url>/_delete')
 @protect
 def delete(url):
     page = wiki.get_or_404(url)
@@ -794,6 +822,12 @@ def user_admin(user_id):
 @app.route('/user/delete/<int:user_id>/')
 def user_delete(user_id):
     pass
+
+
+# Load extensions
+for ext in app.config.get('EXTENSIONS', []):
+    mod = __import__('extensions.%s' % ext, fromlist=['init'])
+    mod.init(app)
 
 if __name__ == '__main__':
     manager.run()

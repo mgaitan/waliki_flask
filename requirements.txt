@@ -5,6 +5,7 @@ Flask-WTF==0.8
 Flask-Cache==0.12
 Jinja2==2.6
 Markdown==2.2.0
+blinker==1.2
 Pygments==1.5
 WTForms==1.0.2
 Werkzeug==0.8.3

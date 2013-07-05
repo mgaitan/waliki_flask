@@ -2,9 +2,12 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap.css') }}">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='responsive.css') }}">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='pygments.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/responsive.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pygments.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/wiki.css') }}">
+        {% block extra_head %}
+        {% endblock extra_head %}
 	</head>
 
 	<body>
@@ -41,17 +44,20 @@
 		</div>
 
 		<div class="container">
+          {% block container %}
 			<div class="row">
 				<div class="span10 offset1">
+
+                    <div class="page-header">
 					{% block header %}
-						<div class="page-header">
-							<h1>{% block title %}{{ page.title }}{% endblock title %}</h1>
-						</div>
+					   <h1>{% block title %}{{ page.title }}{% endblock title %}</h1>
 					{% endblock header %}
+                    </div>
+
 				</div>
 			</div>
 			<div class="row">
-				<div class="span7 offset1">
+                <div class="span10 offset1">
 					{% with messages = get_flashed_messages(with_categories=True) %}
 						{% if messages %}
 							{% for category, message in messages %}
@@ -65,22 +71,24 @@
 					{% if form and form.errors %}
 						<div class="alert alert-error">Errors occured verifying your input. Please check the marked fields below.</div>
 					{% endif %}
-					{% block content %}
-					{% endblock content %}
+
+               {% block content %}
+
+               {% endblock content %}
 				</div>
-				<div class="span3">
-					{% block sidebar %}
-					{% endblock sidebar %}
-				</div>
+
 			</div>
+          {% endblock container %}
 		</div>
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.0/jquery.min.js "></script>
 		<script type="text/javascript">
 			if (typeof jQuery == 'undefined') {
-				document.write(unescape("%3Cscript src='{{ url_for('static', filename='jquery.min.js') }}' type='text/javascript'%3E%3C/script%3E"));
+				document.write(unescape("%3Cscript src='{{ url_for('static', filename='js/jquery.min.js') }}' type='text/javascript'%3E%3C/script%3E"));
 			}
 		</script>
-		<script src="/static/bootstrap.min.js"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        {% block extra_scripts %}
+        {% endblock extra_scripts %}
 		<script type="text/javascript">
 			{% block postscripts %}
 			{% endblock postscripts %}

@@ -1,0 +1,25 @@
+{% extends "history.html" %}
+
+{% block title %}
+    <h3 id="top"><a href="/{{ page.url }}">/{{ page.url }}</a> (@{{ version }})</h3>
+
+{% endblock title %}
+
+
+{% block content %}
+
+<form method="post" action="{{ url_for('edit', url=page.url) }}">
+{{ form.hidden_tag() }}
+{{ form.hidden_tag(form.title, form.body, form.tags, form.message) }}
+
+
+<div class="control-group">
+    <button type="submit" class="btn btn-small btn-success">Restore this version</button>
+</div>
+
+<h1>{{ page.title }} </h1>
+
+    {{ page }}
+
+
+{% endblock content %}

@@ -1,8 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}
-	{{ page.title }}
-{% endblock title %}
+{% block header %}
+
+<div class="pull-right">
+{% block actions %}
+    <div class="btn-group">
+        <a href="{{ url_for('edit', url=page.url) }}" class="btn">Edit</a>
+        <button class="btn dropdown-toggle" data-toggle="dropdown">
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <!-- dropdown menu links -->
+
+            <li><a href="{{ url_for('move', url=page.url) }}">Move</a></li>
+            <li><a href="#confirmDelete" data-toggle="modal" class="text-error">Delete</a></li>
+            {% if extra_actions %}
+            <li class="divider"></li>
+
+            {% for action, url in extra_actions %}
+                <li><a href="{{ url }}">{{ action }}</a></li>
+            {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+{% endblock actions %}
+</div>
+
+{% block title %}<h1>{{ page.title }}</h1>{% endblock title %}
+
+{% endblock %}
+
+
+
 
 {% block content %}
   <div id="confirmDelete" class="modal hide fade" aria-hidden="true">
@@ -18,6 +47,12 @@
     </div>
   </div>
 	{{ page }}
+ {% if page.footer %}
+   <div id="footer">
+   <hr>
+   <div class="pull-right"><em><small>{{ page.footer }}</small></em></div>
+</div>
+ {% endif %}
 {% endblock content %}
 
 {% block sidebar %}
@@ -29,10 +64,16 @@
       {% endfor %}
   </ul>
 {% endif %}
+
+
 <h3>Actions</h3>
 <ul class="nav nav-tabs nav-stacked">
 	<li><a href="{{ url_for('edit', url=page.url) }}">Edit</a></li>
   <li><a href="{{ url_for('move', url=page.url) }}">Move</a></li>
   <li><a href="#confirmDelete" data-toggle="modal" class="text-error">Delete</a></li>
+  {% for action, url in extra_actions %}
+    <li><a href="{{ url }}">{{ action }}</a></li>
+  {% endfor %}
 </ul>
 {% endblock sidebar %}
+

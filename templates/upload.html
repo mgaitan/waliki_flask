@@ -1,13 +1,25 @@
-<html>
-<head>
-    <title></title>
-</head>
-<body>
 
-<form method=POST enctype=multipart/form-data action="{{ url_for('uploads.upload', url='/home') }}">
-    <input type=file name=photo>
-    <input type=submit value="upload">
+<h3>File attached to <a href="#close">/{{ page.url }}</a> </h3>
+
+{% if files %}
+
+<table class="table table-stripped">
+    <thead>
+        <tr><th>File</th></tr>
+    </thead>
+    <tbody>
+       {% for file in files %}
+           <tr><td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td></tr>
+       {% endfor %}
+    </tbody>
+</table>
+{% else %}
+  There is no files attached yet
+{% endif %}
+
+<h3>Upload a new file</h3>
+
+<form method=POST enctype=multipart/form-data action="{{ url_for('uploads.upload', url=page.url) }}">
+    <input type="file" name="attach">
+    <input type="submit" value="upload">
 </form>
-
-</body>
-</html>

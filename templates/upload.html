@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<form method=POST enctype=multipart/form-data action="{{ url_for('uploads.upload', url='/home') }}">
+    <input type=file name=photo>
+    <input type=submit value="upload">
+</form>
+
+</body>
+</html>

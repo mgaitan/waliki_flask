@@ -51,4 +51,4 @@ def get_file(url, filename):
     if not filename in files:
         abort(404)
     outfile = os.path.join(directory, filename)
-    return send_file(outfile, as_attachment=False)
+    return send_file(outfile)

@@ -2,17 +2,22 @@
 {% if files %}
 
 <table class="table table-stripped">
-    <thead>
-        <tr><th>File</th></tr>
-    </thead>
     <tbody>
        {% for file in files %}
-           <tr><td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td></tr>
+        <tr>
+            <td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
+            <td>
+                <a href="#paste"><i class="icon-paste"></i></a>
+
+                <a href="#insert"><i class="icon-link"></i></a>
+                <a href="#remove"><i class="icon-remove"></i></a>
+            </td>
+        </tr>
        {% endfor %}
     </tbody>
 </table>
 {% else %}
-  There is no files attached yet
+  There is no attached files yet
 {% endif %}
 
 <h3>Upload a new file</h3>

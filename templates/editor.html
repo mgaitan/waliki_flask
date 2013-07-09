@@ -6,7 +6,14 @@
 
 {% block actions %}
     <div class="btn-group">
-        <button class="btn" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
+
+            {% if extra_actions %}
+            {% for action, url in extra_actions %}
+                <a href="{{ url }}" class="btn btn-small">{{ action }}</a>
+            {% endfor %}
+            {% endif %}
+
+        <button class="btn btn-small" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
     </div>
 {% endblock %}
 

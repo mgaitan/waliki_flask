@@ -18,7 +18,7 @@ from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from extensions.cache import cache
-from signals import wiki_signals, page_saved, pre_display
+from signals import wiki_signals, page_saved, pre_display, pre_edit
 
 """
     Markup classes
@@ -719,8 +719,10 @@ def edit(url):
                         message=form.message.data.encode('utf-8'))
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
+    extra_context = {}
+    pre_edit.send(page, user=current_user, extra_context=extra_context)
     return render_template('editor.html', form=form, page=page,
-                           markup=markup)
+                           markup=markup, **extra_context)
 
 
 @app.route('/preview/', methods=['POST'])

@@ -1,7 +1,7 @@
 import os.path
 from flaskext.uploads import UploadSet, ALL, configure_uploads
 from flask import (render_template, flash, request, Blueprint, current_app,
-                   abort, send_file)
+                   abort, send_file, url_for)
 
 
 def default_dest(app):
@@ -12,9 +12,20 @@ media = UploadSet('media', ALL, default_dest=default_dest)
 uploads = Blueprint('uploads',  __name__, template_folder='templates')
 
 
+def extra_actions(page, **extra):
+    import ipdb; ipdb.set_trace()
+    context = extra['extra_context']
+    actions = context.get('extra_actions', [])
+    actions.append(('Attachments', url_for('uploads.upload', url=page.url)))
+    context['extra_actions'] = actions
+
+
 def init(app):
     app.register_blueprint(uploads)
     configure_uploads(app, media)
+    app.signals.signal('pre-edit').connect(extra_actions)
+
+
 
 
 @uploads.route('/<path:url>/_upload', methods=['GET', 'POST'])

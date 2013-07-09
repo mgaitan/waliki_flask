@@ -1,6 +1,4 @@
 
-<h3>File attached to <a href="#close">/{{ page.url }}</a> </h3>
-
 {% if files %}
 
 <table class="table table-stripped">
@@ -19,7 +17,53 @@
 
 <h3>Upload a new file</h3>
 
-<form method=POST enctype=multipart/form-data action="{{ url_for('uploads.upload', url=page.url) }}">
+    <div class="progress progress-striped active hide">
+        <div id="progress-bar" class="bar" style="width: 0%;"></div>
+    </div>
+
+<form id='form-attach' method="POST" enctype="multipart/form-data" data-async data-target="#attachments-body" action="{{ url_for('uploads.upload', url=page.url) }}">
     <input type="file" name="attach">
-    <input type="submit" value="upload">
+    <input type="button" class="btn btn-success special" value="upload" >
 </form>
+
+
+
+<script type="text/javascript">
+
+    $('#form-attach :button').on('click', function(event) {
+        event.preventDefault();
+        var $form = $('#form-attach');
+        var $form_data = new FormData($form[0]);
+        var $target = $($form.attr('data-target'));
+        $('div.progress').show();
+        $.ajax({
+            type: $form.attr('method'),
+            url: $form.attr('action'),
+            xhr: function() {  // custom xhr
+                    var myXhr = $.ajaxSettings.xhr();
+                    if(myXhr.upload){ // check if upload property exists
+                        myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // for handling the progress of the upload
+                    }
+                    return myXhr;
+                },
+            enctype: $form.attr('enctype'),
+            data: $form_data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(data, status) {
+                $target.html(data);
+            }
+        });
+    });
+
+    function progressHandlingFunction(e){
+        if(e.lengthComputable){
+            var percent = (e.loaded / e.total) * 100
+            console.log(percent + '%');
+            $('#progress-bar').attr("style", "width:" + percent + "%");
+        }
+    }
+
+
+</script>

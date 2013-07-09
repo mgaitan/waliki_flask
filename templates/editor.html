@@ -7,11 +7,11 @@
 {% block actions %}
     <div class="btn-group">
 
-            {% if extra_actions %}
-            {% for action, url in extra_actions %}
-                <a href="{{ url }}" class="btn btn-small">{{ action }}</a>
-            {% endfor %}
-            {% endif %}
+        {% if extra_actions %}
+        {% for action, url in extra_actions %}
+            <a id="btn-attachments" href="{{ url }}" class="btn btn-small" data-toggle="modal">{{ action }}</a>
+        {% endfor %}
+        {% endif %}
 
         <button class="btn btn-small" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
     </div>
@@ -78,7 +78,21 @@
     <div class="modal-footer">
       <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Ok, got it</a>
     </div>
+</div>
+
+
+ <div id="attachments" class="modal hide fade" aria-hidden="true">
+    <div class="modal-header">
+      <h3>Attachments</h3>
+    </div>
+    <div id="attachments-body" class="modal-body">
+
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Close</a>
+    </div>
   </div>
+
 
 
 {% endblock content %}
@@ -114,5 +128,35 @@ $('#previewbtn').on('click', function(event) {
 	event.preventDefault();
 	$('#previewlink').click();
 });
+
+
+
+
+    $('#btn-attachments').click(function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        $.get(url, function(data){
+            $('#attachments-body').html(data);
+            $('#attachments').modal('show');
+        });
+    });
+
+
+    $('a.special').on('click', function(event) {
+        alert('gol');
+        event.preventDefault();
+        debugger;
+        var $form = $(this);
+        var $target = $($form.attr('data-target'));
+        $.ajax({
+            type: $form.attr('method'),
+            url: $form.attr('action'),
+            data: $form.serialize(),
+
+            success: function(data, status) {
+                $target.html(data);
+            }
+        });
+    });
 
 {%- endblock postscripts %}

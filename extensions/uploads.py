@@ -13,7 +13,6 @@ uploads = Blueprint('uploads',  __name__, template_folder='templates')
 
 
 def extra_actions(page, **extra):
-    import ipdb; ipdb.set_trace()
     context = extra['extra_context']
     actions = context.get('extra_actions', [])
     actions.append(('Attachments', url_for('uploads.upload', url=page.url)))
@@ -24,8 +23,7 @@ def init(app):
     app.register_blueprint(uploads)
     configure_uploads(app, media)
     app.signals.signal('pre-edit').connect(extra_actions)
-
-
+    # patch_request_class(app, 32 * 1024 * 1024)
 
 
 @uploads.route('/<path:url>/_upload', methods=['GET', 'POST'])
@@ -33,7 +31,6 @@ def upload(url):
     page = current_app.wiki.get_or_404(url)
     if request.method == 'POST' and 'attach' in request.files:
         media.save(request.files['attach'], folder=page.url)
-        flash("File uploaded")
     try:
         files = os.listdir(os.path.join(current_app.config.get('CONTENT_DIR'),
                                     'uploads', page.url))

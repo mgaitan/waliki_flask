@@ -10,6 +10,8 @@ textarea#body {
   font-size: 13px;
 }
 
+//diff
+
 span.ins, span.del {
     padding: 3px;
 
@@ -24,3 +26,55 @@ span.del {
     text-decoration: line-through;
     background:#E9AEAE;
 }
+
+
+p.admonition-title { display: none;}
+
+
+div.admonition > p:nth-child(3), div.attention > p:nth-child(3), div.caution > p:nth-child(3),
+div.danger > p:nth-child(3), div.error > p:nth-child(3), div.hint > p:nth-child(3),
+div.important > p:nth-child(3), div.note > p:nth-child(3), div.tip > p:nth-child(3),
+div.warning > p:nth-child(3) {
+              margin-left: 3em; margin-top: -1.6em;
+}
+
+div.admonition, div.system-message, div.attention, div.caution,
+div.danger, div.error, div.hint, div.important,
+div.note, div.tip, div.warning {
+  width: 850px;
+  padding: 8px 35px 8px 14px;
+  margin-bottom: 20px;
+  margin-left: 40px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: #fcf8e3;
+  border: 2px solid #fbeed5;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  color: #c09853;
+}
+
+p.system-message-title {
+ text-decoration: blink;
+}
+
+div.tip {
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+  color: #468847;
+}
+
+div.system-message,
+div.caution,
+div.error {
+  background-color: #f2dede;
+  border-color: #eed3d7;
+  color: #b94a48;
+}
+
+div.important, div.note, div.hint {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #3a87ad;
+}
+

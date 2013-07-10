@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+
+{% endblock extra_head %}
+
 {% block header %}
 
 <div class="pull-right">
@@ -77,3 +83,23 @@
 </ul>
 {% endblock sidebar %}
 
+{% block postscripts %}
+
+function bootstrap_rst(){
+
+   $('div.note').prepend('<i class="icon-info-sign icon-2x"></i>');
+   $('div.tip').prepend('<i class="icon-ok icon-2x"></i>');
+   $('div.warning, div.caution').prepend('<i class="icon-warning-sign icon-2x"></i>');
+   $('div.attention, div.important').prepend('<i class="icon-exclamation icon-2x"></i>');
+   $('div.error').prepend('<i class="icon-remove-sign icon-2x"></i>');
+   $('div.danger').prepend('<i class="icon-bolt icon-2x"></i>');
+   $('div.hint').prepend('<i class="icon-magic icon-2x"></i>');
+
+   $('table.docutils').removeClass('docutils').addClass('table table-bordered table-striped');
+
+}
+
+$(function(){
+    bootstrap_rst()
+});
+{% endblock %}

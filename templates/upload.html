@@ -5,12 +5,12 @@
     <tbody>
        {% for file in files %}
         <tr>
-            <td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
+            <td><a class="insert" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
             <td>
-                <a href="#paste"><i class="icon-paste"></i></a>
+                <a class="insert" href="#paste"><i class="icon-paste"></i></a>
 
-                <a href="#insert"><i class="icon-link"></i></a>
-                <a href="#remove"><i class="icon-remove"></i></a>
+                <a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-link"></i></a>
+                <a class="remove" href="{{ url_for('uploads.remove_file', url=page.url, filename=file) }}"><i class="icon-remove"></i></a>
             </td>
         </tr>
        {% endfor %}

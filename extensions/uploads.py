@@ -39,8 +39,7 @@ def upload(url):
     return render_template('upload.html', page=page, files=files)
 
 
-@uploads.route('/<path:url>/_attach/<filename>')
-def get_file(url, filename):
+def _base_file(url, filename):
     page = current_app.wiki.get_or_404(url)
     directory = os.path.join(current_app.config.get('CONTENT_DIR'),
                                     'uploads', url)
@@ -51,4 +50,16 @@ def get_file(url, filename):
     if not filename in files:
         abort(404)
     outfile = os.path.join(directory, filename)
+    return outfile
+
+
+@uploads.route('/<path:url>/_attach/<filename>')
+def get_file(url, filename):
+    outfile = _base_file(url, filename)
     return send_file(outfile)
+
+@uploads.route('/<path:url>/_remove/<filename>')
+def remove_file(url, filename):
+    outfile = _base_file(url, filename)
+    try:
+        os.remove(outfile)

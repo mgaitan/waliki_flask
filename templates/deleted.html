@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <h3 id="top">Deleted files</a></h3>
+{% endblock title %}
+
+{% block content %}
+
+<form method="post">
+<div class="control-group">
+    <button type="submit" class="btn btn-small disabled" disabled="disabled">Restore selected</button>
+</div>
+<table class="table table-striped">
+        <tbody>
+            {% for file in deleted %}
+                <tr>
+                <td class="span1"><input name="file" type="checkbox" value="{{ file }}" ></td>
+                <td>{{ file }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+</table>
+
+</form>
+{% endblock content %}
+
+{% block postscripts %}
+var $files = $("input:checkbox[name=file]");
+$files.on("change", function() {
+    if($files.filter(":checked").length >= 1) {
+        $('button[type="submit"]').removeAttr("disabled").removeClass('disabled');
+    }
+    else {
+        $('button[type="submit"]').attr("disabled","disabled").addClass("disabled");
+    }
+});
+{% endblock postscripts %}

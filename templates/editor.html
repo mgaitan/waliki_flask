@@ -135,10 +135,16 @@ $('#previewbtn').on('click', function(event) {
     $('#btn-attachments').click(function(e) {
         e.preventDefault();
         var url = $(this).attr('href');
+
+        if (FormData !== undefined){
+            url = url + '?popup'
+        }
+
         $.get(url, function(data){
-            $('#attachments-body').html(data);
-            $('#attachments').modal('show');
+                $('#attachments-body').html(data);
+                $('#attachments').modal('show');
         });
+
     });
 
 

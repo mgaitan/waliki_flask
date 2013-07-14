@@ -1,67 +1,106 @@
+{#
+This is a bit hacky in order to give support IE nightmare.
 
-{% if files %}
+The template is used both as an ajax request and directly in a popup window.
+When is requested by ajax, it shows the list of attached files at the top.
 
-<table class="table table-stripped">
-    <tbody>
-       {% for file in files %}
-        <tr>
-            <td><a class="insert" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
-            <td>
-                <a class="insert" href="#paste"><i class="icon-paste"></i></a>
+Also, it checks if the browser is not capable
+to upload files via ajax and replace the inline form with a link
+that reload the same view but in a popup window. The popup show the same view, but as won't be ajax, it'll only show the form.
+#}
 
-                <a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-link"></i></a>
-                <a class="remove" href="{{ url_for('uploads.remove_file', url=page.url, filename=file) }}"><i class="icon-remove"></i></a>
-            </td>
-        </tr>
-       {% endfor %}
-    </tbody>
-</table>
+{% if request.is_xhr %}
+    {# show list only if it is ajax #}
+    {% if files %}
+
+    <table class="table table-stripped">
+        <tbody>
+           {% for file in files %}
+            <tr>
+                <td><a class="insert" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
+                <td>
+                    <a class="insert" href="#paste"><i class="icon-paste"></i></a>
+
+                    <a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-link"></i></a>
+                    <a class="remove" href="{{ url_for('uploads.remove_file', url=page.url, filename=file) }}"><i class="icon-remove"></i></a>
+                </td>
+            </tr>
+           {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+      There is no attached files yet
+    {% endif %}
+
+
 {% else %}
-  There is no attached files yet
+    {# not ajax: just the form, but including css and js #}
+    <!DOCTYPE html>
+    <html>
+    <head>
+    {% include "snippets/base_head.html" %}
+    </head>
+    <body>
 {% endif %}
+
+
 
 <h3>Upload a new file</h3>
 
-    <div class="progress progress-striped active hide">
-        <div id="progress-bar" class="bar" style="width: 0%;"></div>
+    <div id="upload_popup" class="hide">
+        <a  href="{{ url_for('uploads.upload', url=page.url) }}" class="btn btn-success special" >upload</a>
     </div>
 
-<form id='form-attach' method="POST" enctype="multipart/form-data" data-async data-target="#attachments-body" action="{{ url_for('uploads.upload', url=page.url) }}">
-    <input type="file" name="attach">
-    <input type="button" class="btn btn-success special" value="upload" >
-</form>
+    <div id="ajax_form">
+        <div class="progress progress-striped active hide">
+            <div id="progress-bar" class="bar" style="width: 0%;"></div>
+        </div>
 
+        <form id='form-attach' method="POST" enctype="multipart/form-data" data-async data-target="#attachments-body" action="{{ url_for('uploads.upload', url=page.url) }}">
+            <input type="file" name="attach">
+            <input type="submit" class="btn btn-success special" value="upload" >
+        </form>
+    </div>
 
 
 <script type="text/javascript">
-
-    $('#form-attach :button').on('click', function(event) {
-        event.preventDefault();
-        var $form = $('#form-attach');
-        var $form_data = new FormData($form[0]);
-        var $target = $($form.attr('data-target'));
-        $('div.progress').show();
-        $.ajax({
-            type: $form.attr('method'),
-            url: $form.attr('action'),
-            xhr: function() {  // custom xhr
-                    var myXhr = $.ajaxSettings.xhr();
-                    if(myXhr.upload){ // check if upload property exists
-                        myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // for handling the progress of the upload
-                    }
-                    return myXhr;
-                },
-            enctype: $form.attr('enctype'),
-            data: $form_data,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function(data, status) {
-                $target.html(data);
-            }
+    if (FormData == undefined) {
+        $("#ajax_form").hide();
+        $("#upload_popup").show();
+        $("#upload_popup a").click( function(event){
+             event.preventDefault();
+             $('#attachments').modal('hide');
+             window.open($(this).attr('href'), 'Upload',
+                'height=200,width=400');
         });
-    });
-
+    }else{
+        $('#form-attach').on('submit', function(event) {
+            event.preventDefault();
+            var $form = $(this);
+            var $form_data = new FormData($form[0]);
+            var $target = $($form.attr('data-target'));
+            $('div.progress').show();
+            $.ajax({
+                type: $form.attr('method'),
+                url: $form.attr('action'),
+                xhr: function() {  // custom xhr
+                        var myXhr = $.ajaxSettings.xhr();
+                        if(myXhr.upload){ // check if upload property exists
+                            myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // for handling the progress of the upload
+                        }
+                        return myXhr;
+                    },
+                enctype: $form.attr('enctype'),
+                data: $form_data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(data, status) {
+                    $target.html(data);
+                }
+            });
+        });
+    }
     function progressHandlingFunction(e){
         if(e.lengthComputable){
             var percent = (e.loaded / e.total) * 100
@@ -69,6 +108,10 @@
             $('#progress-bar').attr("style", "width:" + percent + "%");
         }
     }
-
-
 </script>
+
+
+{% if not request.is_xhr %}
+    {% include "snippets/base_footer_scripts.html" %}
+    </body></html>
+{% endif %}

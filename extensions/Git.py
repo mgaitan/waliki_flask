@@ -103,6 +103,16 @@ class GitManager(object):
         page.new = self.page_version(page, new)
         page.old = self.page_version(page, old)
 
+    def deleted(self):
+        """return a list of deleted path"""
+        output = self.repository.git.status('-s')
+        return re.findall(" D (.*)", output, re.MULTILINE)
+
+    def undelete(self, files):
+        """restore deleted files"""
+        for path in files:
+            self.repository.git.checkout('--', path)
+
 """
     Receivers
     ~~~~~~~~~
@@ -165,6 +175,15 @@ def history(url):
     max_changes = max([(v['insertion'] + v['deletion']) for v in history])
     return render_template('history.html', page=page, history=history,
                            max_changes=max_changes)
+
+
+@gitplugin.route('/_admin/deleted/', methods=['GET', 'POST'])
+def deleted():
+    if request.method == 'POST':
+        files = request.form.getlist('file')
+        current_app.git.undelete(files)
+    deleted = current_app.git.deleted()
+    return render_template('deleted.html', deleted=deleted)
 
 
 """

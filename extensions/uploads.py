@@ -39,13 +39,13 @@ def init(app):
 
 @uploads.route('/<path:url>/_upload', methods=['GET', 'POST'])
 def upload(url):
+    last_attached = None
     page = current_app.wiki.get_or_404(url)
     if request.method == 'POST' and 'attach' in request.files:
-        media.save(request.files['attach'], folder=page.url)
-        if not request.is_xhr:
-            # Internet Explorer upload window is not ajaxified but
-            # popup. Just close it.
-            return CLOSE_WINDOW_HTML
+        last_attached = request.files['attach']
+        media.save(last_attached, folder=page.url)
+        flash('"%s" was attached succesfully to /%s' % (last_attached.filename,
+                                                        page.url))
     try:
         files = os.listdir(os.path.join(current_app.config.get('CONTENT_DIR'),
                                     'uploads', page.url))

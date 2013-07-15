@@ -57,16 +57,7 @@
 			</div>
 			<div class="row">
                 <div class="span10 offset1">
-					{% with messages = get_flashed_messages(with_categories=True) %}
-						{% if messages %}
-							{% for category, message in messages %}
-								<div class="alert alert-{{ category }}">
-									<button type="button" class="close" data-dismiss="alert">&times;</button>
-									{{ message }}
-								</div>
-							{% endfor %}
-						{% endif %}
-					{% endwith %}
+					{% include "snippets/flash_messages.html" %}
 					{% if form and form.errors %}
 						<div class="alert alert-error">Errors occured verifying your input. Please check the marked fields below.</div>
 					{% endif %}

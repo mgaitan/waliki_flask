@@ -130,38 +130,12 @@ $('#previewbtn').on('click', function(event) {
 });
 
 
-
-
     $('#btn-attachments').click(function(e) {
         e.preventDefault();
         var url = $(this).attr('href');
-
-        if (FormData !== undefined){
-            url = url + '?popup'
-        }
-
         $.get(url, function(data){
                 $('#attachments-body').html(data);
                 $('#attachments').modal('show');
-        });
-
-    });
-
-
-    $('a.special').on('click', function(event) {
-        alert('gol');
-        event.preventDefault();
-        debugger;
-        var $form = $(this);
-        var $target = $($form.attr('data-target'));
-        $.ajax({
-            type: $form.attr('method'),
-            url: $form.attr('action'),
-            data: $form.serialize(),
-
-            success: function(data, status) {
-                $target.html(data);
-            }
         });
     });
 

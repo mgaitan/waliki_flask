@@ -11,6 +11,7 @@ that reload the same view but in a popup window. The popup show the same view, b
 
 {% if request.is_xhr %}
     {# show list only if it is ajax #}
+
     {% if files %}
 
     <table class="table table-stripped">
@@ -43,8 +44,7 @@ that reload the same view but in a popup window. The popup show the same view, b
     <body>
 {% endif %}
 
-
-
+{% include "snippets/flash_messages.html" %}
 <h3>Upload a new file</h3>
 
     <div id="upload_popup" class="hide">
@@ -64,14 +64,22 @@ that reload the same view but in a popup window. The popup show the same view, b
 
 
 <script type="text/javascript">
-    if (FormData == undefined) {
+    if (FormData === undefined) {
+
         $("#ajax_form").hide();
         $("#upload_popup").show();
         $("#upload_popup a").click( function(event){
              event.preventDefault();
+             var height=200,
+                 width=400,
+                 left=Math.round((screen.width/2)-(width/2)),
+                 top=0;
+              if(screen.height>height) {
+                 top=Math.round((screen.height/2)-(height/2))
+              }
              $('#attachments').modal('hide');
              window.open($(this).attr('href'), 'Upload',
-                'height=200,width=400');
+                         'left='+left+',top='+top+',width='+width+',height='+height);
         });
     }else{
         $('#form-attach').on('submit', function(event) {
@@ -100,13 +108,14 @@ that reload the same view but in a popup window. The popup show the same view, b
                 }
             });
         });
-    }
-    function progressHandlingFunction(e){
-        if(e.lengthComputable){
-            var percent = (e.loaded / e.total) * 100
-            console.log(percent + '%');
-            $('#progress-bar').attr("style", "width:" + percent + "%");
+        function progressHandlingFunction(e){
+            if(e.lengthComputable){
+                var percent = (e.loaded / e.total) * 100
+                console.log(percent + '%');
+                $('#progress-bar').css("width", percent + "%");
+            }
         }
+
     }
 </script>
 

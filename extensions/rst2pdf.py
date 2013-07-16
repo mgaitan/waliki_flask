@@ -5,7 +5,7 @@ import tempfile
 from flask import Blueprint, send_file, current_app, url_for
 
 
-pdf = Blueprint('rst2pdf', __name__,
+pdf = Blueprint('pdf', __name__,
                 template_folder='templates')
 
 

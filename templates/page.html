@@ -19,7 +19,7 @@
             <!-- dropdown menu links -->
 
             <li><a href="{{ url_for('move', url=page.url) }}">Move</a></li>
-            <li><a href="#confirmDelete" data-toggle="modal" class="text-error">Delete</a></li>
+            <li><a id="confirmDelete" class="text-error">Delete</a></li>
             {% if extra_actions %}
             <li class="divider"></li>
 
@@ -40,18 +40,7 @@
 
 
 {% block content %}
-  <div id="confirmDelete" class="modal hide fade" aria-hidden="true">
-    <div class="modal-header">
-      <h3>Are you sure?</h3>
-    </div>
-    <div class="modal-body">
-      <p>Are you sure you want to delete {{ page.title }}?  This cannot be undone.</p>
-    </div>
-    <div class="modal-footer">
-      <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">No</a>
-      <a href="{{ url_for('delete', url=page.url) }}" class="btn btn-danger">Yes, delete.</a>
-    </div>
-  </div>
+
 	{{ page }}
  {% if page.footer %}
    <div id="footer">
@@ -84,6 +73,17 @@
 {% endblock sidebar %}
 
 {% block postscripts %}
+
+$('#confirmDelete').on('click', function() {
+
+    bootbox.dialog("Are you sure you want to delete {{ page.title }}?",
+                   [{"label": "Cancel"},
+                    {"label": "Yes, delete",
+                     "callback": function(){
+                        $('<form method=\"post\" action=\"{{ url_for('delete', url=page.url) }}\">').appendTo('body').submit()  },
+                     "class":"btn-danger"}]);
+});
+
 
 function bootstrap_rst(){
 

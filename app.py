@@ -746,12 +746,12 @@ def move(url):
     return render_template('move.html', form=form, page=page)
 
 
-@app.route('/<path:url>/_delete')
+@app.route('/<path:url>/_delete', methods=['POST'])
 @protect
 def delete(url):
     page = wiki.get_or_404(url)
     wiki.delete(url)
-    flash('Page "%s" was deleted.' % page.title, 'success')
+    flash('Page "%s" was deleted.' % page.title)
     return redirect(url_for('home'))
 
 

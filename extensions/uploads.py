@@ -1,7 +1,7 @@
 import os.path
 from flaskext.uploads import UploadSet, ALL, configure_uploads
 from flask import (render_template, flash, request, Blueprint, current_app,
-                   abort, send_file, url_for)
+                   abort, send_file, url_for, jsonify)
 
 CLOSE_WINDOW_HTML = """
 <html>
@@ -74,11 +74,12 @@ def get_file(url, filename):
     return send_file(outfile)
 
 
-@uploads.route('/<path:url>/_remove/<filename>')
+@uploads.route('/<path:url>/_remove/<filename>', methods=['POST', 'DELETE'])
 def remove_file(url, filename):
     outfile = _base_file(url, filename)
     try:
         os.remove(outfile)
-    except:
-        pass
-    return ''
+    finally:
+        return jsonify({'removed': filename})
+    return jsonify({'removed': None})
+

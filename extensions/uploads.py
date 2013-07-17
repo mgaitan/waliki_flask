@@ -1,4 +1,5 @@
 import os.path
+import imghdr
 from flaskext.uploads import UploadSet, ALL, configure_uploads
 from flask import (render_template, flash, request, Blueprint, current_app,
                    abort, send_file, url_for, jsonify)
@@ -68,10 +69,13 @@ def _base_file(url, filename):
     return outfile
 
 
-@uploads.route('/<path:url>/_attach/<filename>')
+@uploads.route('/<path:url>/_attachment/<filename>')
 def get_file(url, filename):
     outfile = _base_file(url, filename)
-    return send_file(outfile)
+    # by default only images are embeddable.
+    as_attachment = ((not imghdr.what(outfile) and 'embed' not in request.args)
+                     or 'as_attachment' in request.args)
+    return send_file(outfile, as_attachment=as_attachment)
 
 
 @uploads.route('/<path:url>/_remove/<filename>', methods=['POST', 'DELETE'])

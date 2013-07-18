@@ -2,10 +2,8 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/responsive.css') }}">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pygments.css') }}">
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/wiki.css') }}">
+        {% include "snippets/base_head.html" %}
+
         {% block extra_head %}
         {% endblock extra_head %}
         <title>{% if page %} {{ page.title }} - {% endif %}{{ config.TITLE }} </title>
@@ -59,16 +57,7 @@
 			</div>
 			<div class="row">
                 <div class="span10 offset1">
-					{% with messages = get_flashed_messages(with_categories=True) %}
-						{% if messages %}
-							{% for category, message in messages %}
-								<div class="alert alert-{{ category }}">
-									<button type="button" class="close" data-dismiss="alert">&times;</button>
-									{{ message }}
-								</div>
-							{% endfor %}
-						{% endif %}
-					{% endwith %}
+					{% include "snippets/flash_messages.html" %}
 					{% if form and form.errors %}
 						<div class="alert alert-error">Errors occured verifying your input. Please check the marked fields below.</div>
 					{% endif %}
@@ -81,13 +70,8 @@
 			</div>
           {% endblock container %}
 		</div>
-		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.0/jquery.min.js "></script>
-		<script type="text/javascript">
-			if (typeof jQuery == 'undefined') {
-				document.write(unescape("%3Cscript src='{{ url_for('static', filename='js/jquery.min.js') }}' type='text/javascript'%3E%3C/script%3E"));
-			}
-		</script>
-		<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+        {% include "snippets/base_footer_scripts.html" %}
         {% block extra_scripts %}
         {% endblock extra_scripts %}
 		<script type="text/javascript">

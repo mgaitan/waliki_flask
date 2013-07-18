@@ -6,7 +6,14 @@
 
 {% block actions %}
     <div class="btn-group">
-        <button class="btn" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
+
+        {% if extra_actions %}
+        {% for action, url in extra_actions %}
+            <a id="btn-attachments" href="{{ url }}" class="btn btn-small" data-toggle="modal">{{ action }}</a>
+        {% endfor %}
+        {% endif %}
+
+        <button class="btn btn-small" href="#howto" data-toggle="modal"><i class="icon-question-sign"></i> How to</button>
     </div>
 {% endblock %}
 
@@ -71,7 +78,21 @@
     <div class="modal-footer">
       <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Ok, got it</a>
     </div>
+</div>
+
+
+ <div id="attachments" class="modal hide fade" aria-hidden="true">
+    <div class="modal-header">
+      <h3>Attachments</h3>
+    </div>
+    <div id="attachments-body" class="modal-body">
+
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Close</a>
+    </div>
   </div>
+
 
 
 {% endblock content %}
@@ -107,5 +128,15 @@ $('#previewbtn').on('click', function(event) {
 	event.preventDefault();
 	$('#previewlink').click();
 });
+
+
+    $('#btn-attachments').click(function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        $.get(url, function(data){
+                $('#attachments-body').html(data);
+                $('#attachments').modal('show');
+        });
+    });
 
 {%- endblock postscripts %}

@@ -56,7 +56,7 @@ that reload the same view but in a popup window. The popup show the same view, b
 
         <form id='form-attach' method="POST" enctype="multipart/form-data" data-async data-target="#attachments-body" action="{{ url_for('uploads.upload', url=page.url) }}">
             <input type="file" name="attach">
-            <input type="submit" class="btn btn-success special" value="upload" >
+            <input type="submit" class="btn btn-success special disabled" disabled="disabled" value="upload" >
         </form>
     </div>
 
@@ -178,5 +178,14 @@ that reload the same view but in a popup window. The popup show the same view, b
 
     });
 
+    $(function(){
+        $('input:file').change(function() {
+          if($(this).val()) {
+            $('input:submit').removeAttr("disabled").removeClass('disabled');
+          } else {
+            $('input:submit').attr("disabled","disabled").addClass("disabled");
+          }
+        });
+    });
 </script>
 

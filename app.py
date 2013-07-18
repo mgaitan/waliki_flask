@@ -18,7 +18,7 @@ from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from extensions.cache import cache
-from signals import wiki_signals, page_saved, pre_display
+from signals import wiki_signals, page_saved, pre_display, pre_edit
 
 """
     Markup classes
@@ -97,6 +97,9 @@ class Markdown(Markup):
 class RestructuredText(Markup):
     NAME = 'restructuredtext'
     META_LINE = '.. %s: %s\n'
+    IMAGE_LINE = '.. image:: %(url)s'
+    LINK_LINE = '`%(filename)s <%(url)s>`_'
+
     EXTENSION = '.rst'
     HOWTO = """
         This editor is `reStructuredText`_ featured::
@@ -719,8 +722,10 @@ def edit(url):
                         message=form.message.data.encode('utf-8'))
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
+    extra_context = {}
+    pre_edit.send(page, user=current_user, extra_context=extra_context)
     return render_template('editor.html', form=form, page=page,
-                           markup=markup)
+                           markup=markup, **extra_context)
 
 
 @app.route('/preview/', methods=['POST'])
@@ -744,12 +749,12 @@ def move(url):
     return render_template('move.html', form=form, page=page)
 
 
-@app.route('/<path:url>/_delete')
+@app.route('/<path:url>/_delete', methods=['POST'])
 @protect
 def delete(url):
     page = wiki.get_or_404(url)
     wiki.delete(url)
-    flash('Page "%s" was deleted.' % page.title, 'success')
+    flash('Page "%s" was deleted.' % page.title)
     return redirect(url_for('home'))
 
 

@@ -723,7 +723,7 @@ def edit(url):
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('display', url=url))
     extra_context = {}
-    pre_edit.send(page, user=current_user, extra_context=extra_context)
+    pre_edit.send(page, url=url, user=current_user, extra_context=extra_context)
     return render_template('editor.html', form=form, page=page,
                            markup=markup, **extra_context)
 

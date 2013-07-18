@@ -27,7 +27,7 @@ uploads = Blueprint('uploads',  __name__, template_folder='templates')
 def extra_actions(page, **extra):
     context = extra['extra_context']
     actions = context.get('extra_actions', [])
-    actions.append(('Attachments', url_for('uploads.upload', url=page.url)))
+    actions.append(('Attachments', url_for('uploads.upload', url=extra.get('url'))))
     context['extra_actions'] = actions
 
 

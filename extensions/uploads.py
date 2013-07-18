@@ -1,6 +1,6 @@
 import os.path
 import imghdr
-from flaskext.uploads import UploadSet, ALL, configure_uploads
+from flaskext.uploads import UploadSet, ALL, configure_uploads, patch_request_class
 from flask import (render_template, flash, request, Blueprint, current_app,
                    abort, send_file, url_for, jsonify)
 
@@ -35,7 +35,7 @@ def init(app):
     app.register_blueprint(uploads)
     configure_uploads(app, media)
     app.signals.signal('pre-edit').connect(extra_actions)
-    # patch_request_class(app, 32 * 1024 * 1024)
+    patch_request_class(app, 32 * 1024 * 1024)      # limit 32mb
 
 
 @uploads.route('/<path:url>/_upload', methods=['GET', 'POST'])

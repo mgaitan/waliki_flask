@@ -97,6 +97,9 @@ class Markdown(Markup):
 class RestructuredText(Markup):
     NAME = 'restructuredtext'
     META_LINE = '.. %s: %s\n'
+    IMAGE_LINE = '.. image:: %(url)s'
+    LINK_LINE = '`%(filename)s <%(url)s>`_'
+
     EXTENSION = '.rst'
     HOWTO = """
         This editor is `reStructuredText`_ featured::

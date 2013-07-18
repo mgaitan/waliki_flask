@@ -52,7 +52,8 @@ def upload(url):
                                     'uploads', page.url))
     except OSError:
         files = []
-    return render_template('upload.html', page=page, files=files)
+    return render_template('upload.html', page=page, files=files,
+                            markup=current_app.wiki.markup)
 
 
 def _base_file(url, filename):

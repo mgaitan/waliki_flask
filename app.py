@@ -8,6 +8,7 @@ import markdown
 import docutils.core
 import docutils.io
 import json
+from rst2html5 import HTML5Writer
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
                    abort)
@@ -142,7 +143,7 @@ class RestructuredText(Markup):
                     'syntax_highlight': 'short',
                     }
 
-        html, _, _ = self._rst2html(self.raw_content,
+        html = self._rst2html(self.raw_content,
                                     settings_overrides=settings)
 
         # Convert unknow links to internal wiki links.
@@ -150,10 +151,10 @@ class RestructuredText(Markup):
         #   Something_ will link to '/something'
         #  `something great`_  to '/something_great'
         #  `another thing <thing>`_  '/thing'
-        refs = re.findall(r'Unknown target name: &quot;(.*)&quot;', html)
+        refs = re.findall(r'Unknown target name: "(.*)"', html)
         if refs:
             content = self.raw_content + self.get_autolinks(refs)
-            html, _, _ = self._rst2html(content, settings_overrides=settings)
+            html = self._rst2html(content, settings_overrides=settings)
         meta_lines, body = self.raw_content.split('\n\n', 1)
         meta = self._parse_meta(meta_lines.split('\n'))
         return html, body, meta
@@ -167,9 +168,13 @@ class RestructuredText(Markup):
                   source_class=docutils.io.StringInput,
                   destination_path=None, reader=None, reader_name='standalone',
                   parser=None, parser_name='restructuredtext', writer=None,
-                  writer_name='html', settings=None, settings_spec=None,
+                  writer_name=None, settings=None, settings_spec=None,
                   settings_overrides=None, config_section=None,
                   enable_exit_status=None):
+
+        if not writer:
+            writer = HTML5Writer()
+
         # Taken from Nikola
         # http://bit.ly/14CmQyh
         output, pub = docutils.core.publish_programmatically(
@@ -183,8 +188,7 @@ class RestructuredText(Markup):
             settings_overrides=settings_overrides,
             config_section=config_section,
             enable_exit_status=enable_exit_status)
-        return (pub.writer.parts['fragment'], pub.document.reporter.max_level,
-                pub.settings.record_dependencies)
+        return pub.writer.parts['body']
 
     def _parse_meta(self, lines):
         """ Parse Meta-Data. Taken from Python-Markdown"""

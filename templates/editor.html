@@ -36,7 +36,7 @@
 
 
 			{{ input(form.body, placeholder=markup.NAME|capitalize,
-                     class="span8", rows="15") }}
+                     class="span8", rows="15", id="code") }}
 
             <div class="row">
                 <div class="span4">
@@ -104,7 +104,7 @@ $('#previewlink').on('click', function() {
 	var $form = $('.form');
   var $inputs = $form.find('input, textarea, button');
   var $pre = $('#preview');
-  var bodycontent = {{ markup.render_meta('title', 'preview')|tojson|safe }} + "\n\n" + $form.find('textarea').val();
+  var bodycontent = {{ markup.render_meta('title', 'preview')|tojson|safe }} + "\n\n" + editor.getValue();
   $inputs.prop('disabled', true);
   $pre.removeClass('alert').removeClass('alert-error').html("Loading...");
   $.ajax({
@@ -138,5 +138,24 @@ $('#previewbtn').on('click', function(event) {
                 $('#attachments').modal('show');
         });
     });
+
+
+// Configurable Codemirror integration
+
+var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+  lineNumbers: true,
+  tabMode: "indent"
+});
+
+var theme = '{{ config.THEME }}';
+editor.setOption("theme", theme);
+
+var markLang = '{{ markup.NAME }}';
+if (markLang == 'restructuredtext'){
+  editor.setOption("mode", 'rst');
+}
+else{
+  editor.setOption("mode", 'markdown');
+} 
 
 {%- endblock postscripts %}

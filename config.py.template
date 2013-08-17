@@ -1,0 +1,6 @@
+# encoding: utf-8
+SECRET_KEY='afasdiufhfkhasdnfklhjfgnbdxasdf'
+TITLE='Waliki demo'
+#PRIVATE=True
+MARKUP='restructuredtext'  # 'markdown'
+EXTENSIONS = ['Git', 'rst2pdf', 'uploads']

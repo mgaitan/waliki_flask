@@ -21,6 +21,8 @@ that reload the same view but in a popup window. The popup show the same view, b
                 <td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
                 <td style="width: 30px">
                     <a title="Insert" class="insert" data-file="{{ file }}" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-download"></i></a>
+                    <a title="Copy to clipboard" class="copy" data-file="{{ file }}" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-paste"></i></a>
+
                     <a title="Delete" class="remove" data-file="{{ file }}" href="{{ url_for('uploads.remove_file', url=page.url, filename=file) }}"><i class="icon-remove"></i></a>
                 </td>
             </tr>
@@ -64,6 +66,9 @@ that reload the same view but in a popup window. The popup show the same view, b
     {% include "snippets/base_footer_scripts.html" %}
     </body></html>
 {% endif %}
+
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zclip/1.1.1/jquery.zclip.min.js"></script>
 
 <script type="text/javascript">
     if (FormData === undefined) {
@@ -119,17 +124,15 @@ that reload the same view but in a popup window. The popup show the same view, b
         }
 
     }
-    $('.insert').on('click', function(event){
-        event.preventDefault();
 
-        var $link = $(this);
-        $('#attachments').modal('hide');
+    function get_code(){
+
 
         var cursorPos = $('#body').prop('selectionStart');
         var v = $('#body').val();
+
         var textBefore = v.substring(0,  cursorPos );
         var textAfter  = v.substring( cursorPos, v.length );
-
         var isImg = new RegExp('(jpg|png|gif)$', 'i');
 
         if ( isImg.test($(this).attr('data-file')) ) {
@@ -156,7 +159,14 @@ that reload the same view but in a popup window. The popup show the same view, b
         }
         insert = insert.replace('%(filename)s', $link.attr('data-file'));
         insert = insert.replace('%(url)s', $link.attr('href'));
-        $('#body').val( textBefore + insert + textAfter );
+        return textBefore + insert + textAfter;
+    }
+
+    $('.insert').on('click', function(event){
+        event.preventDefault();
+        var $link = $(this);
+        $('#attachments').modal('hide');
+        $('#body').val( get_code());
     });
 
 
@@ -177,6 +187,12 @@ that reload the same view but in a popup window. The popup show the same view, b
                     "class":"btn-danger"}]);
 
     });
+
+     $('a.copy').zclip({
+        path: '//cdnjs.cloudflare.com/ajax/libs/zclip/1.1.1/ZeroClipboard.swf',
+        copy: $('p#description').text()
+    });
+
 
     $(function(){
         $('input:file').change(function() {

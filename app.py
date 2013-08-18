@@ -629,7 +629,7 @@ app.debug = True
 app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
-app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme 
+app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
 try:
     app.config.from_pyfile(
         os.path.join(app.config.get('CONTENT_DIR'), 'config.py')

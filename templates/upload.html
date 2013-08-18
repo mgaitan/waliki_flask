@@ -65,6 +65,7 @@ that reload the same view but in a popup window. The popup show the same view, b
     </body></html>
 {% endif %}
 
+
 <script type="text/javascript">
     if (FormData === undefined) {
 
@@ -119,45 +120,53 @@ that reload the same view but in a popup window. The popup show the same view, b
         }
 
     }
-    $('.insert').on('click', function(event){
-        event.preventDefault();
 
-        var $link = $(this);
-        $('#attachments').modal('hide');
+    function get_code($link){
 
-        var cursorPos = $('#body').prop('selectionStart');
-        var v = $('#body').val();
-        var textBefore = v.substring(0,  cursorPos );
-        var textAfter  = v.substring( cursorPos, v.length );
-
+        var cursorPos = editor.getCursor();
         var isImg = new RegExp('(jpg|png|gif)$', 'i');
 
-        if ( isImg.test($(this).attr('data-file')) ) {
+        if ( isImg.test($link.attr('data-file')) ) {
             // insert as an embeded image
 
             var insert = {{ markup.IMAGE_LINE|tojson|safe }}
 
-            // ensure good spacing
-            while (textBefore.substr(textBefore.length - 2, 2) !== '\n\n'){
-                textBefore += '\n';
-            }
-            while (textAfter.substr(0, 2) !== '\n\n'){
-                textAfter = '\n' + textAfter;
-            }
+           /*
+                // ensure good spacing
+                while (textBefore.substr(textBefore.length - 2, 2) !== '\n\n'){
+                    textBefore += '\n';
+                }
+                while (textAfter.substr(0, 2) !== '\n\n'){
+                    textAfter = '\n' + textAfter;
+                }
+            */
+
         } else {
             // insert as an inline link
             var insert = {{ markup.LINK_LINE|tojson|safe }}
+            /*
+
             if (textBefore.substr(textBefore.length - 1, 1) !== ' '){
                  textBefore += ' ';
             }
             if (textAfter.substr(0, 1) !== ' '){
                 textAfter = ' ' + textAfter;
             }
+            */
         }
         insert = insert.replace('%(filename)s', $link.attr('data-file'));
         insert = insert.replace('%(url)s', $link.attr('href'));
-        $('#body').val( textBefore + insert + textAfter );
+        return insert;
+    }
+
+    $('.insert').on('click', function(event){
+        event.preventDefault();
+        $('#attachments').modal('hide');
+        var insert = get_code($(this));
+        editor.replaceSelection(insert);
+        editor.focus();
     });
+
 
 
     $('.remove').on('click', function(event){
@@ -178,6 +187,7 @@ that reload the same view but in a popup window. The popup show the same view, b
 
     });
 
+
     $(function(){
         $('input:file').change(function() {
           if($(this).val()) {
@@ -187,5 +197,5 @@ that reload the same view but in a popup window. The popup show the same view, b
           }
         });
     });
-</script>
 
+</script>

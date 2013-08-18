@@ -20,7 +20,7 @@ that reload the same view but in a popup window. The popup show the same view, b
             <tr>
                 <td><a href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"> {{ file }}</a></td>
                 <td style="width: 30px">
-                    <a title="Insert" class="insert" data-file="{{ file }}" href="{{ url_for('uploads.get_file', url=page.url, filename=file) }}"><i class="icon-download"></i></a>
+                    <a title="Insert" class="insert" data-file="{{ file }}" href="{{ url_for('uploads.get_file', url=page.url, filename=file, _external=True) }}"><i class="icon-download"></i></a>
                     <a title="Delete" class="remove" data-file="{{ file }}" href="{{ url_for('uploads.remove_file', url=page.url, filename=file) }}"><i class="icon-remove"></i></a>
                 </td>
             </tr>

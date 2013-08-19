@@ -9,9 +9,9 @@ PROMPT_PREFIX =  '> '
 
 def extensions():
     extensions = []
-    for files in os.listdir("./extensions"):
-        if files.endswith(".py") and files != "__init__.py":
-           extensions.append(files.replace(".py", ""))
+    for file in os.listdir("./extensions"):
+        if file.endswith(".py") and file not in ("__init__.py", "cache.py"):
+           extensions.append(file.replace(".py", ""))
     return extensions
 
 class ValidationError(Exception):
@@ -127,16 +127,18 @@ restructuredtext or markdown'''
 
 def write_file(fpath, content):
     print 'Creating file %s.' % fpath
-    f = open(fpath, 'wt')
+    f = open(fpath, 'w')
     try:
         f.write(content)
     finally:
         f.close()
     
 
-
-
 def main():
+    TARGET = os.path.join('content', 'config.py')
+    if os.path.exists(TARGET):
+	print "A config file already exists in %s" % TARGET
+	return 
     d = {}
     try:
         ask_user(d)
@@ -153,7 +155,8 @@ def main():
         content += key + ' = ' + str(value) 
         content +='\n'
 
-    write_file('content/config.py', content)
-      
-main()
+    write_file(TARGET, content)
+
+if __name__ == "__main__":      
+    main()
 

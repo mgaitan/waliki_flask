@@ -1,5 +1,9 @@
 {% extends "history.html" %}
 
+{% block page_tools %}
+    <a href="{{ url_for('gitplugin.history', url=page.url) }}" class="btn btn-small">History</a>
+    {{ super() }}
+{% endblock %}
 
 {% block content %}
 

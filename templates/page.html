@@ -45,7 +45,7 @@
  {% if page.footer %}
    <div id="footer">
    <hr>
-   <div class="pull-right"><em><small>{{ page.footer }}</small></em></div>
+   <div class="pull-right"><em><small>{{ page.footer|safe }}</small></em></div>
 </div>
  {% endif %}
 {% endblock content %}

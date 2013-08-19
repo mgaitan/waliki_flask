@@ -56,9 +56,13 @@ class GitManager(object):
 
     def last_rev(self, page):
         path = self._get_blob_path(page.path)
-        log = self.repository.git.log('--format=%an %ad', '--date=relative',
-                                      path).split('\n')[0]
-        page.footer = u'Last edited by %s' % log.decode('utf-8')
+        logs = self.repository.git.log('--format=%an %ad|%h', '--date=relative',
+                                      path).split('\n')
+        msg, version = logs[0].decode('utf-8').split('|')
+        _, version_old = logs[1].decode('utf-8').split('|')
+
+        url = url_for('gitplugin.diff', url=page.url, new=version, old=version_old)
+        page.footer = u'<a href="%s">Last edited</a> by %s' % (url, msg)
 
     def page_history(self, page):
         path = self._get_blob_path(page.path)

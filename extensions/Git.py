@@ -58,8 +58,13 @@ class GitManager(object):
         path = self._get_blob_path(page.path)
         logs = self.repository.git.log('--format=%an %ad|%h', '--date=relative',
                                       path).split('\n')
+
         msg, version = logs[0].decode('utf-8').split('|')
-        _, version_old = logs[1].decode('utf-8').split('|')
+
+        if len(logs) > 1:
+            _, version_old = logs[1].decode('utf-8').split('|')
+        else: # in case of only one commit
+            _, version_old = '', ''
 
         url = url_for('gitplugin.diff', url=page.url, new=version, old=version_old)
         page.footer = u'<a href="%s">Last edited</a> by %s' % (url, msg)

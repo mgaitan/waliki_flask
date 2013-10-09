@@ -12,12 +12,12 @@ from rst2html5 import HTML5Writer
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
                    abort)
-from flask.ext.wtf import (Form, TextField, TextAreaField, PasswordField,
-                           Required, ValidationError)
-from flask.ext.wtf.html5 import EmailField
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
+from flask.ext.wtf import Form
+from wtforms import (TextField, TextAreaField, PasswordField)
+from wtforms.validators import (Required, ValidationError, Email)
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
 
@@ -333,7 +333,6 @@ class Wiki(object):
         path = self.path(url)
         if not self.exists(url):
             return False
-        print path
         os.remove(path)
         return True
 
@@ -605,7 +604,7 @@ class LoginForm(Form):
 
 class SignupForm(Form):
     name = TextField('Username', [Required()])
-    email = EmailField('Email', [Required()])
+    email = TextField('Email', [Required(), Email()])
     full_name = TextField('Full name')
     password = PasswordField('Password', [Required()])
 

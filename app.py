@@ -17,7 +17,7 @@ from flask.ext.login import (LoginManager, login_required, current_user,
 from flask.ext.script import Manager
 from flask.ext.wtf import Form
 from wtforms import (TextField, TextAreaField, PasswordField)
-from wtforms.validators import (Required, ValidationError)
+from wtforms.validators import (Required, ValidationError, Email)
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
 
@@ -604,7 +604,7 @@ class LoginForm(Form):
 
 class SignupForm(Form):
     name = TextField('Username', [Required()])
-    email = TextField('Email', [Required()]) # TODO: Make this an 'email' type input field
+    email = TextField('Email', [Required(), Email()])
     full_name = TextField('Full name')
     password = PasswordField('Password', [Required()])
 

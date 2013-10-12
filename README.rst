@@ -3,9 +3,9 @@
 
 :home: https://github.com/mgaitan/waliki/
 :doc and demo: http://waliki.nqnwebs.com
+:license: `BSD <https://github.com/mgaitan/waliki/blob/master/LICENSE>`_
 
-
-It's a fork of Alexander Jung's `wiki <https://github.com/alexex/wiki>`_ project with few improvements:
+Waliki is a fork of Alexander Jung's `wiki <https://github.com/alexex/wiki>`_ project with few improvements:
 
 - Extensible architecture
 - A pluggable Git backend: version control for your content!

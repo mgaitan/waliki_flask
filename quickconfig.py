@@ -79,10 +79,9 @@ def do_prompt(d, key, text, default=None, validator=nonempty):
             print('* ' + str(err))
             continue
         break
-    if validator != boolean:
-        d[key] = "'%s'"%x
-    else:
-        d[key] = x
+
+    d[key] = x
+
 
 def ask_user(d):
     """Ask the user for quickstart values missing from *d*.
@@ -101,7 +100,7 @@ Please enter values for the following settings (just press Enter to
 accept a default value, if one is given in brackets).'''
 
     d['SECRET_KEY'] = "".join(choice(lowercase) for i in range(20)) 
-    d['SECRET_KEY'] = "'%s'"%d['SECRET_KEY']
+    d['SECRET_KEY'] = "%s" % d['SECRET_KEY']
 
     if 'PRIVATE' not in d:
         print 'Do you want you want a Private Waliki?'
@@ -152,7 +151,7 @@ def main():
         os.makedirs('content')
     content = "# encoding: utf-8\n"
     for key, value in d.items():
-        content += key + ' = ' + str(value) 
+        content += key + ' = ' + repr(value) 
         content +='\n'
 
     write_file(TARGET, content)

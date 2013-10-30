@@ -100,7 +100,6 @@ Please enter values for the following settings (just press Enter to
 accept a default value, if one is given in brackets).'''
 
     d['SECRET_KEY'] = "".join(choice(lowercase) for i in range(20)) 
-    d['SECRET_KEY'] = "%s" % d['SECRET_KEY']
 
     if 'PRIVATE' not in d:
         print 'Do you want you want a Private Waliki?'

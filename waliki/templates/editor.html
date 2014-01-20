@@ -32,8 +32,12 @@
 
         <form method="post" class="form">
 			{{ form.hidden_tag() }}
-			{{ input(form.title, placeholder="Title", class="span8") }}
 
+            {% if form.nometa.data == False %}
+                {{ input(form.title, placeholder="Title", class="span8") }}
+            {% else %}
+                {{ input(form.title, placeholder="Title", class="span8", readonly=true) }}
+            {% endif %}
 
 			{{ input(form.body, placeholder=markup.NAME|capitalize,
                      class="span8", rows="15", id="code") }}
@@ -42,8 +46,10 @@
                 <div class="span4">
             {{ input(form.message, placeholder="Changes summary (optional)", class="span4") }}
 </div>
-                <div class="span4">{{ input(form.tags, placeholder="Tags (comma separated)", class="span4") }}
-            </div></div>
+
+            {% if form.nometa.data == False %}
+                <div class="span4">{{ input(form.tags, placeholder="Tags (comma separated)", class="span4") }}</div>
+            {% endif %}</div>
 
 <div class="row">
     <div class="span8">
@@ -104,13 +110,13 @@ $('#previewlink').on('click', function() {
 	var $form = $('.form');
   var $inputs = $form.find('input, textarea, button');
   var $pre = $('#preview');
-  var bodycontent = {{ markup.render_meta('title', 'preview')|tojson|safe }} + "\n\n" + editor.getValue();
+  var bodycontent = {% if form.nometa.data == False %}{{ markup.render_meta('title', 'preview')|tojson|safe }} + "\n\n" + {% endif %} editor.getValue();
   $inputs.prop('disabled', true);
   $pre.removeClass('alert').removeClass('alert-error').html("Loading...");
   $.ajax({
     url: "/preview/",
     type: "POST",
-    data: { body: bodycontent },
+    data: { body: bodycontent, url: '{{ page.url }}' },
     success: function(msg) {
       $pre.html(msg);
       bootstrap_rst();

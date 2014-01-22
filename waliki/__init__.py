@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import binascii
 import hashlib
+import mimetypes
 import os
 import re
 import textwrap
@@ -11,27 +12,63 @@ import json
 from rst2html5 import HTML5Writer
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
-                   abort)
+                   send_from_directory, abort)
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from flask.ext.wtf import Form
-from wtforms import (TextField, TextAreaField, PasswordField)
+from wtforms import (TextField, TextAreaField, PasswordField, HiddenField)
 from wtforms.validators import (Required, ValidationError, Email)
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
 
+from pygments.lexers import get_lexer_for_filename
+from pygments.formatters import HtmlFormatter
+from pygments import highlight
 """
     Markup classes
     ~~~~~~~~~~~~~~
 """
+file_exts = {}
 
+def get_markup(path):
+    # build mapping of extensions to handlers, if necessary
+    if not file_exts:
+        for s in Markup.__subclasses__():
+            if hasattr(s, 'EXTENSION'):
+                file_exts.update(dict([(x, s) for x in s.EXTENSION]))
+
+    # 1. filename match against each EXTENSION
+    try:
+        this_ext = "." + path.split('.')[-1]
+        if this_ext in file_exts.keys():
+            return file_exts[this_ext]
+    except:
+        # find by extension failed, press on
+        pass
+
+    # 2. handle images and other raw files
+    (this_type, zipped) = mimetypes.guess_type(path, strict=False)
+    if this_type:
+        if this_type.startswith('image/') or zipped:
+            return RawHandler
+
+    # 3. pygments
+    try:
+        lexer = get_lexer_for_filename(path)
+        if lexer:
+            return HighlightedCodeFactory(lexer)
+    except ValueError:
+        pass
+
+    # 4. all else failed, plaintext
+    return Plaintext
 
 class Markup(object):
     """ Base markup class."""
     NAME = 'Text'
     META_LINE = '%s: %s\n'
-    EXTENSION = '.txt'
+    EXTENSION = []
     HOWTO = """ """
 
     def __init__(self, raw_content):
@@ -57,7 +94,7 @@ class Markup(object):
 class Markdown(Markup):
     NAME = 'markdown'
     META_LINE = '%s: %s\n'
-    EXTENSION = '.md'
+    EXTENSION = ['.md', '.mdwn']
     HOWTO = """
         This editor is [markdown][] featured.
 
@@ -90,8 +127,16 @@ class Markdown(Markup):
         # and adds meta
         md = markdown.Markdown(['codehilite', 'fenced_code', 'meta'])
         html = md.convert(self.raw_content)
-        meta_lines, body = self.raw_content.split('\n\n', 1)
-        meta = md.Meta
+
+        try:
+            meta_lines, body = self.raw_content.split('\n\n', 1)
+        except ValueError:
+            body = self.raw_content
+
+        if hasattr(md, 'Meta') and md.Meta:
+            meta = md.Meta
+        else:
+            meta = {}
         return html, body, meta
 
 
@@ -101,7 +146,7 @@ class RestructuredText(Markup):
     IMAGE_LINE = '.. image:: %(url)s'
     LINK_LINE = '`%(filename)s <%(url)s>`_'
 
-    EXTENSION = '.rst'
+    EXTENSION = ['.rst']
     HOWTO = """
         This editor is `reStructuredText`_ featured::
 
@@ -208,6 +253,63 @@ class RestructuredText(Markup):
                     meta[key] = [value]
         return meta
 
+def HighlightedCodeFactory(new_lexer):
+    class HighlightedCode(Markup):
+        NAME = 'highlight'
+        META_LINE = ''
+        EXTENSION = []
+        HOWTO = """
+            This editor is syntax-highlighted sourcecode.
+
+            Tags are not supported.
+            """
+        lexer = new_lexer
+
+        @classmethod
+        def render_meta(cls, key, value):
+            return None
+
+        def process(self):
+            formatter = HtmlFormatter(style='default')
+            html = '<style>' + formatter.get_style_defs() + '</style>' + highlight(self.raw_content, self.lexer, formatter)
+            body = self.raw_content
+            meta = {'tags': 'source code'}
+            return html, body, meta
+
+    return HighlightedCode
+
+class RawHandler(Markup):
+    NAME = 'raw'
+    META_LINE = ''
+    EXTENSION = []
+    HOWTO = """
+        Raw data (unrendered).
+        """
+    @classmethod
+    def render_meta(cls, key, value):
+        return None
+
+    def process(self):
+        meta = {'tags': 'raw data'}
+        return ("", "", meta)
+
+class Plaintext(Markup):
+    NAME = 'plaintext'
+    META_LINE = ''
+    EXTENSION = ['.txt']
+    HOWTO = """
+        This editor is plaintext.
+        """
+    @classmethod
+    def render_meta(cls, key, value):
+        return None
+
+    def process(self):
+        html = '<pre>' + self.raw_content + '</pre>'
+        body = '<pre>' + self.raw_content + '</pre>'
+        meta = {}
+        return html, body, meta
+
 """
     Wiki classes
     ~~~~~~~~~~~~
@@ -215,17 +317,18 @@ class RestructuredText(Markup):
 
 
 class Page(object):
-    def __init__(self, path, url, new=False, markup=Markdown):
+    def __init__(self, path, url, new=False):
         self.path = path
         self.url = url
-        self.markup = markup
+        self.markup = get_markup(path)
+        self._raw = self.markup.NAME == 'raw'
         self._meta = {}
         if not new:
             self.load()
             self.render()
 
     def load(self, content=None):
-        if not content:
+        if not content and not self._raw:
             with open(self.path, 'rU') as f:
                 content = f.read().decode('utf-8')
         self.content = self.markup(content)
@@ -241,11 +344,12 @@ class Page(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         with open(self.path, 'w') as f:
-            for key in sorted(self._meta.keys()):
-                value = self._meta[key]
-                line = self.markup.META_LINE % (key, value)
-                f.write(line.encode('utf-8'))
-            f.write('\n'.encode('utf-8'))
+            if self.markup.META_LINE:
+                for key in sorted(self._meta.keys()):
+                    value = self._meta[key]
+                    line = self.markup.META_LINE % (key, value)
+                    f.write(line.encode('utf-8'))
+                f.write('\n'.encode('utf-8'))
             f.write(self.body.replace('\r\n', os.linesep).encode('utf-8'))
         if update:
             self.load()
@@ -278,6 +382,8 @@ class Page(object):
 
     @property
     def title(self):
+        if 'title' not in self._meta:
+            return os.path.basename(self.path)
         return self['title']
 
     @title.setter               # NOQA
@@ -286,29 +392,39 @@ class Page(object):
 
     @property
     def tags(self):
+        if 'tags' not in self._meta:
+            return ''
         return self['tags']
 
     @tags.setter               # NOQA
     def tags(self, value):
         self['tags'] = value
 
+    # Hide title and tags fields for files where they shouldn't be written
+    @property
+    def nometa(self):
+        return not bool(self.markup.META_LINE)
+
+    @nometa.setter
+    def nometa(self, value):
+        pass
+
 
 class Wiki(object):
-    def __init__(self, root, markup=Markdown):
+    def __init__(self, root):
         self.root = root
-        self.markup = markup
 
     def path(self, url):
-        return os.path.join(self.root, url + self.markup.EXTENSION)
+        return os.path.join(self.root, url)
 
     def exists(self, url):
         path = self.path(url)
         return os.path.exists(path)
 
     def get(self, url):
-        path = os.path.join(self.root, url + self.markup.EXTENSION)
+        path = os.path.join(self.root, url)
         if self.exists(url):
-            return Page(path, url, markup=self.markup)
+            return Page(path, url)
         return None
 
     def get_or_404(self, url):
@@ -321,12 +437,15 @@ class Wiki(object):
         path = self.path(url)
         if self.exists(url):
             return False
-        return Page(path, url, new=True, markup=self.markup)
+        return Page(path, url, new=True)
 
     def move(self, url, newurl):
+        newdir = os.path.join(self.root, os.path.dirname(newurl))
+        if not os.path.exists(newdir):
+            os.makedirs(newdir)
         os.rename(
-            os.path.join(self.root, url) + self.markup.EXTENSION,
-            os.path.join(self.root, newurl) + self.markup.EXTENSION
+            os.path.join(self.root, url),
+            os.path.join(self.root, newurl)
         )
 
     def delete(self, url):
@@ -339,20 +458,20 @@ class Wiki(object):
     def index(self, attr=None):
         def _walk(directory, path_prefix=()):
             for name in os.listdir(directory):
+                if name in ['.git', 'cache', 'templates']: continue
                 fullname = os.path.join(directory, name)
                 if os.path.isdir(fullname):
                     _walk(fullname, path_prefix + (name,))
-                elif name.endswith(self.markup.EXTENSION):
-                    ext_len = len(self.markup.EXTENSION)
+                else:
                     if not path_prefix:
-                        url = name[:-ext_len]
+                        url = name
                     else:
-                        url = os.path.join(path_prefix[0], name[:-ext_len])
+                        url = os.path.join('/'.join(path_prefix), name)
                     if attr:
                         pages[getattr(page, attr)] = page
                     else:
-                        pages.append(Page(fullname, url.replace('\\', '/'),
-                                          markup=self.markup))
+                        pages.append(Page(fullname, url.replace('\\', '/')))
+
         if attr:
             pages = {}
         else:
@@ -582,6 +701,7 @@ class EditorForm(Form):
     title = TextField('', [Required()])
     body = TextAreaField('', [Required()])
     tags = TextField('')
+    nometa = HiddenField('')
     message = TextField('')
 
 
@@ -627,7 +747,7 @@ app = Flask(__name__)
 app.debug = True
 app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
-app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
+app.config['MARKUP'] = 'markdown'  # default markup for editing new pages
 app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
 try:
     app.config.from_pyfile(
@@ -648,7 +768,7 @@ loginmanager.login_view = 'user_login'
 markup = dict([(klass.NAME, klass) for klass in
                Markup.__subclasses__()])[app.config.get('MARKUP')]
 
-wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
+wiki = Wiki(app.config.get('CONTENT_DIR'))
 
 # FIX ME: This monkeypatching is pollution crap .
 #         Should be possible to import them wherever,
@@ -675,9 +795,9 @@ def load_user(name):
 @app.route('/')
 @protect
 def home():
-    page = wiki.get('home')
+    page = wiki.get_tags()['HOMEPAGE'][0]
     if page:
-        return display('home')
+        return display(page.url)
     return render_template('home.html')
 
 
@@ -689,6 +809,7 @@ def index():
 
 
 @app.route('/<path:url>/')
+@app.route('/<path:url>')
 @protect
 def display(url):
     page = wiki.get(url)
@@ -696,6 +817,12 @@ def display(url):
         flash('The page "{0}" does not exist, '
               'feel free to make it now!'.format((url)), 'warning')
         return redirect(url_for('edit', url=urlify(url)))
+
+    if page._raw:
+        directory = os.path.dirname(page.path)
+        filename = os.path.basename(page.path)
+        return send_from_directory(directory, filename)
+
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
     return render_template('page.html', page=page, **extra_context)
@@ -728,8 +855,13 @@ def edit(url):
         return redirect(url_for('display', url=url))
     extra_context = {}
     pre_edit.send(page, url=url, user=current_user, extra_context=extra_context)
+    if hasattr(page, 'markup'):
+        my_markup = page.markup
+    else:
+        my_markup = markup
+
     return render_template('editor.html', form=form, page=page,
-                           markup=markup, **extra_context)
+                           markup=my_markup, **extra_context)
 
 
 @app.route('/preview/', methods=['POST'])
@@ -737,7 +869,11 @@ def edit(url):
 def preview():
     a = request.form
     data = {}
-    data['html'], data['body'], data['meta'] = markup(a['body']).process()
+    try:
+        my_markup = wiki.get(a['url']).markup
+    except:
+        my_markup = markup
+    data['html'], data['body'], data['meta'] = my_markup(a['body']).process()
     return data['html']
 
 

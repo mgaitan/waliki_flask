@@ -78,7 +78,7 @@ class GitManager(object):
                 ("message", "%s")]
         format = "{%s}" % ','.join([""" \"%s\": \"%s\" """ % item for item in data])
         output = self.repository.git.log('--format=%s' % format,
-                                         '-z',
+                                         '-z', '--no-merges',
                                          '--shortstat', path)
         output = output.replace('\x00', '').split('\n')
         history = []

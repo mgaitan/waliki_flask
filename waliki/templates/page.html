@@ -32,7 +32,19 @@
 {% endblock actions %}
 </div>
 
-{% block title %}<h1>{{ page.title }}</h1>{% endblock title %}
+{% block title %}<h1>{{ page.title }}</h1>
+<h5>/{% for item in page.crumbs %}
+  <a href="{{ item[1] }}">{{ item[0] }}</a>
+{% if not loop.last %}/{% endif %}
+{% endfor %}
+{% if page.tags %}
+<span style='float:right'>Tags:
+{% for tag in page.tags.split(',') %}
+<a href='/tag/{{ tag.strip() }}'>{{ tag }}</a>{% if not loop.last %},{% endif %}
+{% endfor %}
+</span>
+{% endif %}</h5>
+{% endblock title %}
 
 {% endblock %}
 

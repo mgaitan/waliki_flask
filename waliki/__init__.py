@@ -323,7 +323,12 @@ class Page(object):
         self.markup = get_markup(path)
         self._raw = self.markup.NAME == 'raw'
         self._meta = {}
-        if not new:
+        self.directory = False
+        if (os.path.exists(self.path) and
+            os.path.isdir(self.path)):
+            self.directory = True
+
+        if not new and not self.directory:
             self.load()
             self.render()
 
@@ -409,6 +414,13 @@ class Page(object):
     def nometa(self, value):
         pass
 
+    @property
+    def crumbs(self):
+        urls = []
+        parts = self.url.split('/')
+        for x in range(len(parts)):
+            urls.append((parts[x], '/' + '/'.join(parts[0:x+1])))
+        return urls
 
 class Wiki(object):
     def __init__(self, root):
@@ -455,7 +467,7 @@ class Wiki(object):
         os.remove(path)
         return True
 
-    def index(self, attr=None):
+    def index(self, attr=None, prefix=None):
         def _walk(directory, path_prefix=()):
             for name in os.listdir(directory):
                 if name in ['.git', 'cache', 'templates']: continue
@@ -476,9 +488,13 @@ class Wiki(object):
             pages = {}
         else:
             pages = []
-        _walk(self.root)
+        if prefix:
+            _walk(os.path.join(self.root, prefix), path_prefix = tuple(prefix.split('/')))
+        else:
+            _walk(self.root)
         if not attr:
-            return sorted(pages, key=lambda x: x.title.lower())
+            field = app.config.get('SORT')
+            return sorted(pages, key=lambda x: getattr(x, field).lower())
         return pages
 
     def get_by_title(self, title):
@@ -748,6 +764,7 @@ app.debug = True
 app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # default markup for editing new pages
+app.config['SORT'] = 'title'
 app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
 try:
     app.config.from_pyfile(
@@ -825,7 +842,11 @@ def display(url):
 
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
-    return render_template('page.html', page=page, **extra_context)
+    if page.directory:
+        pages = wiki.index(prefix=page.url)
+        return render_template('directory.html', pages=pages, crumbs=page.crumbs, **extra_context)
+    else:
+        return render_template('page.html', page=page, **extra_context)
 
 
 @app.route('/create/', methods=['GET', 'POST'])

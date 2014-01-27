@@ -416,7 +416,7 @@ class Page(object):
 
     @property
     def crumbs(self):
-        urls = []
+        urls = [('<root>', '/')]
         parts = self.url.split('/')
         for x in range(len(parts)):
             urls.append((parts[x], '/' + '/'.join(parts[0:x+1])))
@@ -467,13 +467,16 @@ class Wiki(object):
         os.remove(path)
         return True
 
-    def index(self, attr=None, prefix=None):
+    def index(self, attr=None, prefix=None, tree=True):
         def _walk(directory, path_prefix=()):
             for name in os.listdir(directory):
                 if name in ['.git', 'cache', 'templates']: continue
                 fullname = os.path.join(directory, name)
                 if os.path.isdir(fullname):
-                    _walk(fullname, path_prefix + (name,))
+                    if tree:
+                        _walk(fullname, path_prefix + (name,))
+                    else:
+                        pages.append(Page(fullname, os.path.join('/'.join(path_prefix), name)))
                 else:
                     if not path_prefix:
                         url = name
@@ -496,6 +499,17 @@ class Wiki(object):
             field = app.config.get('SORT')
             return sorted(pages, key=lambda x: getattr(x, field).lower())
         return pages
+
+    def render_dir(self, page):
+        output = '<UL>'
+        for p in wiki.index(prefix=page.url, tree=False):
+            relpath = os.path.relpath(p.url, page.url)
+            output += "<LI><A HREF='/%s'>%s</A>" % (p.url, relpath)
+            output += (p.title != relpath) and " (%s)</LI>" % p.title or "</LI>"
+            if p.directory:
+                output += self.render_dir(p)
+        output += '</UL>'
+        return output
 
     def get_by_title(self, title):
         pages = self.index(attr='title')
@@ -812,10 +826,14 @@ def load_user(name):
 @app.route('/')
 @protect
 def home():
-    page = wiki.get_tags()['HOMEPAGE'][0]
-    if page:
-        return display(page.url)
-    return render_template('home.html')
+    try:
+        page = wiki.get_tags()['HOMEPAGE'][0]
+        if page:
+            return display(page.url)
+    except (IndexError, KeyError):
+        pass
+    return display('')
+#    return render_template('home.html')
 
 
 @app.route('/index/')
@@ -843,7 +861,7 @@ def display(url):
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
     if page.directory:
-        pages = wiki.index(prefix=page.url)
+        pages = wiki.render_dir(page)
         return render_template('directory.html', pages=pages, crumbs=page.crumbs, **extra_context)
     else:
         return render_template('page.html', page=page, **extra_context)

@@ -1,29 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}Directory Listing
-<h5>/{% for item in crumbs %}
+<h5>{% for item in crumbs %}
   <a href="{{ item[1] }}">{{ item[0] }}</a>
 {% if not loop.last %}/{% endif %}
 {% endfor %}</h5>{% endblock title %}
 
 
 {% block content %}
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Title</th>
-				<th>URL</th>
-			</tr>
-		</thead>
-		<tbody>
-            {% for page in pages %}
-				<tr>
-					<td><a href="{{ url_for('display', url=page.url) }}">{{ page.title }}</a></td>
-					<td><a href="{{ url_for('display', url=page.url) }}">{{ page.url }}</a></td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+{{ pages|safe }}
 {% endblock content %}
 
 {% block sidebar %}

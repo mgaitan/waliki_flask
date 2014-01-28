@@ -323,7 +323,12 @@ class Page(object):
         self.markup = get_markup(path)
         self._raw = self.markup.NAME == 'raw'
         self._meta = {}
-        if not new:
+        self.directory = False
+        if (os.path.exists(self.path) and
+            os.path.isdir(self.path)):
+            self.directory = True
+
+        if not new and not self.directory:
             self.load()
             self.render()
 
@@ -409,6 +414,13 @@ class Page(object):
     def nometa(self, value):
         pass
 
+    @property
+    def crumbs(self):
+        urls = [('<root>', '/')]
+        parts = self.url.split('/')
+        for x in range(len(parts)):
+            urls.append((parts[x], '/' + '/'.join(parts[0:x+1])))
+        return urls
 
 class Wiki(object):
     def __init__(self, root):
@@ -455,13 +467,16 @@ class Wiki(object):
         os.remove(path)
         return True
 
-    def index(self, attr=None):
+    def index(self, attr=None, prefix=None, tree=True):
         def _walk(directory, path_prefix=()):
             for name in os.listdir(directory):
                 if name in ['.git', 'cache', 'templates']: continue
                 fullname = os.path.join(directory, name)
                 if os.path.isdir(fullname):
-                    _walk(fullname, path_prefix + (name,))
+                    if tree:
+                        _walk(fullname, path_prefix + (name,))
+                    else:
+                        pages.append(Page(fullname, os.path.join('/'.join(path_prefix), name)))
                 else:
                     if not path_prefix:
                         url = name
@@ -476,10 +491,25 @@ class Wiki(object):
             pages = {}
         else:
             pages = []
-        _walk(self.root)
+        if prefix:
+            _walk(os.path.join(self.root, prefix), path_prefix = tuple(prefix.split('/')))
+        else:
+            _walk(self.root)
         if not attr:
-            return sorted(pages, key=lambda x: x.title.lower())
+            field = app.config.get('SORT')
+            return sorted(pages, key=lambda x: getattr(x, field).lower())
         return pages
+
+    def render_dir(self, page):
+        output = '<UL>'
+        for p in wiki.index(prefix=page.url, tree=False):
+            relpath = os.path.relpath(p.url, page.url)
+            output += "<LI><A HREF='/%s'>%s</A>" % (p.url, relpath)
+            output += (p.title != relpath) and " (%s)</LI>" % p.title or "</LI>"
+            if p.directory:
+                output += self.render_dir(p)
+        output += '</UL>'
+        return output
 
     def get_by_title(self, title):
         pages = self.index(attr='title')
@@ -748,6 +778,7 @@ app.debug = True
 app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # default markup for editing new pages
+app.config['SORT'] = 'title'
 app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
 try:
     app.config.from_pyfile(
@@ -795,10 +826,14 @@ def load_user(name):
 @app.route('/')
 @protect
 def home():
-    page = wiki.get_tags()['HOMEPAGE'][0]
-    if page:
-        return display(page.url)
-    return render_template('home.html')
+    try:
+        page = wiki.get_tags()['HOMEPAGE'][0]
+        if page:
+            return display(page.url)
+    except (IndexError, KeyError):
+        pass
+    return display('')
+#    return render_template('home.html')
 
 
 @app.route('/index/')
@@ -825,7 +860,11 @@ def display(url):
 
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
-    return render_template('page.html', page=page, **extra_context)
+    if page.directory:
+        pages = wiki.render_dir(page)
+        return render_template('directory.html', pages=pages, crumbs=page.crumbs, **extra_context)
+    else:
+        return render_template('page.html', page=page, **extra_context)
 
 
 @app.route('/create/', methods=['GET', 'POST'])

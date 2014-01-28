@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Directory Listing
+<h5>{% for item in crumbs %}
+  <a href="{{ item[1] }}">{{ item[0] }}</a>
+{% if not loop.last %}/{% endif %}
+{% endfor %}</h5>{% endblock title %}
+
+
+{% block content %}
+{{ pages|safe }}
+{% endblock content %}
+
+{% block sidebar %}
+<ul class="nav nav-tabs nav-stacked">
+	<li><a href="{{ url_for('create') }}">New Page</a></li>
+	<li><a href="{{ url_for('tags') }}">Tag List</a></li>
+	<li><a href="{{ url_for('search') }}">Search</a></li>
+</ul>
+{% endblock sidebar %}

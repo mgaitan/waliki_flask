@@ -25,6 +25,8 @@ from signals import wiki_signals, page_saved, pre_display, pre_edit
 from pygments.lexers import get_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 from pygments import highlight
+
+from new import classobj
 """
     Markup classes
     ~~~~~~~~~~~~~~
@@ -57,7 +59,13 @@ def get_markup(path):
     try:
         lexer = get_lexer_for_filename(path)
         if lexer:
-            return HighlightedCodeFactory(lexer)
+            name = "%sLexer" % lexer.name
+            if name in globals():
+                return globals()[name]
+            else:
+                hcf = classobj(name, (HighlightedCode,), {'lexer': lexer})
+                globals()[name] = hcf
+                return hcf
     except ValueError:
         pass
 
@@ -253,30 +261,27 @@ class RestructuredText(Markup):
                     meta[key] = [value]
         return meta
 
-def HighlightedCodeFactory(new_lexer):
-    class HighlightedCode(Markup):
-        NAME = 'highlight'
-        META_LINE = ''
-        EXTENSION = []
-        HOWTO = """
-            This editor is syntax-highlighted sourcecode.
 
-            Tags are not supported.
-            """
-        lexer = new_lexer
+class HighlightedCode(Markup):
+    NAME = 'highlight'
+    META_LINE = ''
+    EXTENSION = []
+    HOWTO = """
+        This editor is syntax-highlighted sourcecode.
 
-        @classmethod
-        def render_meta(cls, key, value):
-            return None
+        Tags are not supported.
+        """
 
-        def process(self):
-            formatter = HtmlFormatter(style='default')
-            html = '<style>' + formatter.get_style_defs() + '</style>' + highlight(self.raw_content, self.lexer, formatter)
-            body = self.raw_content
-            meta = {'tags': 'source code'}
-            return html, body, meta
+    @classmethod
+    def render_meta(cls, key, value):
+        return None
 
-    return HighlightedCode
+    def process(self):
+        formatter = HtmlFormatter(style='default')
+        html = '<style>' + formatter.get_style_defs() + '</style>' + highlight(self.raw_content, self.lexer, formatter)
+        body = self.raw_content
+        meta = {'tags': 'source code'}
+        return html, body, meta
 
 class RawHandler(Markup):
     NAME = 'raw'
@@ -356,6 +361,12 @@ class Page(object):
                     f.write(line.encode('utf-8'))
                 f.write('\n'.encode('utf-8'))
             f.write(self.body.replace('\r\n', os.linesep).encode('utf-8'))
+
+        paths = os.path.dirname(self.url).split('/')
+        for p in range(len(paths)):
+            cache.delete_memoized(wiki.index, wiki, prefix='/'.join(paths[0:p+1]))
+        cache.delete_memoized(wiki.index, wiki)
+
         if update:
             self.load()
             self.render()
@@ -467,6 +478,7 @@ class Wiki(object):
         os.remove(path)
         return True
 
+    @cache.memoize(timeout=300)
     def index(self, attr=None, prefix=None, tree=True):
         def _walk(directory, path_prefix=()):
             for name in os.listdir(directory):

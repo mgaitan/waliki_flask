@@ -14,15 +14,14 @@
 
 """
 
-#===============================================================================
-# IMPORTS
-#===============================================================================
+
 #===============================================================================
 # IMPORTS
 #===============================================================================
 
 import os
 import re
+import importlib
 
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
@@ -453,7 +452,8 @@ def user_delete(user_id):
 #===============================================================================
 
 for ext in app.config.get('EXTENSIONS', []):
-    mod = __import__('extensions.%s' % ext, fromlist=['init'])
+    modname = 'waliki.extensions.{ext}'.format(ext=ext)
+    mod = importlib.import_module(modname)
     mod.init(app)
 
 

@@ -17,7 +17,7 @@ MARKUP = 'restructuredtext'
 #   public: everybody can read and write a page (default)
 #   protected: anyone can view but only registered users can write
 #   private: only registered users can see this wiki
-PERMISSIONS = 'protected'
+PERMISSIONS = 'private'
 
 # Can be HTML
 CUSTOM_FOOTER = 'All conter is under <a href="https://raw2.github.com/mgaitan/waliki/master/README.rst">This</a> license'

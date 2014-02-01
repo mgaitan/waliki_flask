@@ -2,4 +2,5 @@ venv
 .venv
 *.pyc
 *.sublime-*
-content/
+_data/
+config.py

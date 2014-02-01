@@ -377,7 +377,10 @@ class Wiki(object):
         return True
 
     def index(self, attr=None):
+
         def _walk(directory, path_prefix=()):
+            if not os.path.exists(directory):
+                os.makedirs(directory)
             for name in os.listdir(directory):
                 fullname = os.path.join(directory, name)
                 if os.path.isdir(fullname):

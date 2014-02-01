@@ -6,6 +6,18 @@
 # This file is part of Waliki (http://waliki.nqnwebs.com/)
 # License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
 
+#===============================================================================
+# DOCS
+#===============================================================================
+
+"""All users base classes
+
+"""
+
+#===============================================================================
+# IMPORTS
+#===============================================================================
+
 import os
 import json
 import hashlib
@@ -14,11 +26,9 @@ import binascii
 from flask import current_app
 
 
-"""
-    User classes & helpers
-    ~~~~~~~~~~~~~~~~~~~~~~
-"""
-
+#===============================================================================
+# USER CLASESS
+#===============================================================================
 
 class UserManager(object):
     """A very simple user Manager, that saves it's data as json."""
@@ -116,6 +126,10 @@ class User(object):
                                           user_password, password)
 
 
+#===============================================================================
+# FUNCTIONS
+#===============================================================================
+
 def get_default_authentication_method():
     return current_app.config.get('DEFAULT_AUTHENTICATION_METHOD', 'hash')
 
@@ -149,3 +163,10 @@ def check_password(authmethod, upassword, password):
     elif authmethod == "cleartext":
         return password == upassword
     return False
+
+#===============================================================================
+# MAIN
+#===============================================================================
+
+if __name__ == "__main__":
+    print(__doc__)

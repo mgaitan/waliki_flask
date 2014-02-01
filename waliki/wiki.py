@@ -6,21 +6,32 @@
 # This file is part of Waliki (http://waliki.nqnwebs.com/)
 # License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
 
+#===============================================================================
+# DOCS
+#===============================================================================
+
+"""All wiki specific functionality
+
+"""
+
+#===============================================================================
+# IMPORTS
+#===============================================================================
+
 import re
 import os
 import shutil
 import hashlib
 
-
 from flask import abort
 from extensions.cache import cache
+
 import markup
 
-"""
-    Wiki classes
-    ~~~~~~~~~~~~
-"""
 
+#===============================================================================
+#  WIKI CLASSES
+#===============================================================================
 
 class Page(object):
     def __init__(self, path, url, new=False, markup=markup.Markdown):
@@ -221,3 +232,11 @@ class Wiki(object):
                     matched.append(page)
                     break
         return matched
+
+
+#===============================================================================
+# MAIN
+#===============================================================================
+
+if __name__ == "__main__":
+    print(__doc__)

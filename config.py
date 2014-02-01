@@ -17,6 +17,7 @@ MARKUP = 'restructuredtext'
 #   public: everybody can read and write a page (default)
 #   protected: anyone can view but only registered users can write
 #   private: only registered users can see this wiki
+#   mafia: all the users are created inactive
 PERMISSIONS = 'private'
 
 # Can be HTML

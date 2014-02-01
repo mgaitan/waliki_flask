@@ -40,6 +40,7 @@ CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
 PERMISSIONS_PUBLIC = "public"
 PERMISSIONS_PROTECTED = "protected"
 PERMISSIONS_PRIVATE = "private"
+PERMISIONS_MAFIA = "mafia"
 DEFAULT_PERMISSIONS = PERMISSIONS_PUBLIC
 
 
@@ -587,7 +588,7 @@ def user_can_edit(can_modify=True):
     elif pers == PERMISSIONS_PROTECTED:
         if can_modify and not current_user.is_authenticated():
             return False
-    elif pers == PERMISSIONS_PRIVATE:
+    elif pers in (PERMISSIONS_PRIVATE, PERMISIONS_MAFIA):
         if not current_user.is_authenticated():
             return False
     return True
@@ -941,8 +942,9 @@ def user_index():
 def user_signup():
     form = SignupForm()
     if form.validate_on_submit():
+        active_user = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS) != PERMISIONS_MAFIA
         app.users.add_user(form.name.data, form.password.data,
-                           form.full_name.data, form.email.data,
+                           form.full_name.data, form.email.data, active_user,
                            authentication_method=get_default_authentication_method())
         flash('You were registered successfully. Please login now.', 'success')
         return redirect(request.args.get("next") or url_for('index'))

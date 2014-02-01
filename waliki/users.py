@@ -1,5 +1,9 @@
 import os
 import json
+import hashlib
+import binascii
+
+from flask import current_app
 
 
 """
@@ -11,7 +15,7 @@ import json
 class UserManager(object):
     """A very simple user Manager, that saves it's data as json."""
     def __init__(self, path, app):
-    	self.app = app
+        self.app = app
         self.file = os.path.join(path, 'users.json')
 
     def read(self):
@@ -41,7 +45,7 @@ class UserManager(object):
             'email': email
         }
         new_user['password'] = self.app.make_password(authentication_method,
-                                                 	  password)
+                                                      password)
         users[name] = new_user
         self.write(users)
         userdata = users.get(name)
@@ -100,12 +104,12 @@ class User(object):
         authentication_method is missing or unknown."""
         authentication_method = self.data.get('authentication_method', None)
         user_password = self.get('password')
-        return app.check_password(authentication_method,
-                                  user_password, password)
+        return current_app.check_password(authentication_method,
+                                          user_password, password)
 
 
 def get_default_authentication_method():
-    return app.config.get('DEFAULT_AUTHENTICATION_METHOD', 'hash')
+    return current_app.config.get('DEFAULT_AUTHENTICATION_METHOD', 'hash')
 
 
 def make_salted_hash(password, salt=None):

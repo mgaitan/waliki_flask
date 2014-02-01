@@ -16,7 +16,8 @@ MARKUP = 'restructuredtext'
 # PERMISSIONS can be:
 #   public: everybody can read and write a page (default)
 #   protected: anyone can view but only registered users can write
-#   private: only registered users can see this wiki
+#   secure: only registered users can see this wiki
+#   private: all the users are created inactive
 PERMISSIONS = 'public'
 
 # Can be HTML

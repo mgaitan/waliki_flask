@@ -427,12 +427,14 @@ def user_index():
 def user_signup():
     form = SignupForm()
     if form.validate_on_submit():
-        active_user = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS) != PERMISSIONS_PRIVATE
+        active_user = app.config.get('PERMISSIONS', DEFAULT_PERMISSIONS) != PERMISSIONS_PRIVATE
         app.users.add_user(form.name.data, form.password.data,
                            form.full_name.data, form.email.data, active_user,
                            authentication_method=get_default_authentication_method())
         flash('You were registered successfully. Please login now.', 'success')
-        return redirect(request.args.get("next") or url_for('index'))
+        if not active_user:
+            flash('Your user is inactive by default, please contact the wiki admin', 'error')
+        return redirect(request.args.get('next') or url_for('index'))
     return render_template('signup.html', form=form)
 
 

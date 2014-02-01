@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from flask.signals import Namespace
 
 wiki_signals = Namespace()

@@ -4,3 +4,4 @@ venv
 *.sublime-*
 _data/
 config.py
+*.db

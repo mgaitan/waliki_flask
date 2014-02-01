@@ -579,12 +579,14 @@ def check_password(authmethod, upassword, password):
 
 def user_can_edit(can_modify=True):
     pers = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS)
-    if pers != PERMISSIONS_PUBLIC and pers == PERMISSIONS_PROTECTED:
+    if pers == PERMISSIONS_PUBLIC:
+        return True
+    elif pers == PERMISSIONS_PROTECTED:
         if can_modify and not current_user.is_authenticated():
-           return False
-        if pers != PERMISSIONS_PUBLIC and pers == PERMISSIONS_PRIVATE:
-            if not current_user.is_authenticated():
-                return False
+            return False
+    elif pers == PERMISSIONS_PRIVATE:
+        if not current_user.is_authenticated():
+            return False
     return True
 
 

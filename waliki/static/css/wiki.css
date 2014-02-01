@@ -86,6 +86,7 @@ div.important, div.note, div.hint {
     border-style:solid;
     border-width:5px;
     resize: vertical;
+    overflow: auto;
 }
 
 .conflict {

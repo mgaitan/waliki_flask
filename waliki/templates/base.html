@@ -43,18 +43,17 @@
                                 <li><a href="{{ url_for('index') }}"><i class="icon-list"></i> Index</a></li>
                                 <li><a href="{{ url_for('tags') }}"><i class="icon-tags"></i> Tags</a></li>
                                 <li><a href="{{ url_for('search') }}"><i class="icon-search"></i> Search</a></li>
-                                <li class="divider-vertical"></li>
                                 {% if user_can_edit() %}
-                                <li><a href="{{ url_for('create') }}"><i class="icon-file"></i> New Page</a></li>
                                 <li class="divider-vertical"></li>
+                                <li><a href="{{ url_for('create') }}"><i class="icon-file"></i> New Page</a></li>
                                 {% endif %}
                                 <li></li>
                             </ul>
 
                             <ul class="nav pull-right">
                                 {% if current_user.is_anonymous() %}
-                                    <li><a href="{{ url_for('user_login') }}">Login</a></li>
-                                    <li><a href="{{ url_for('user_signup') }}">Signup</a></li>
+                                    <li><a href="{{ url_for('user_login') }}"><i class="icon-road"></i> Login</a></li>
+                                    <li><a href="{{ url_for('user_signup') }}"><i class="icon-pencil"></i> Signup</a></li>
 
                                 {% else %}
                                 <li class="dropdown">

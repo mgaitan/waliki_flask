@@ -6,7 +6,7 @@
 {% block actions %}
     {% if user_can_edit() %}
     <div class="btn-group actions">
-        <a href="{{ url_for('edit', url=page.url) }}" class="btn">Edit</a>
+        <a href="{{ url_for('edit', url=page.url) }}" class="btn"><i class="icon-edit"></i> Edit</a>
         <button class="btn dropdown-toggle" data-toggle="dropdown">
             <span class="caret"></span>
         </button>

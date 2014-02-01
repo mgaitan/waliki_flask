@@ -78,3 +78,24 @@ div.important, div.note, div.hint {
   color: #3a87ad;
 }
 
+.footer {
+    text-align: center;
+}
+
+.conflict-container {
+    border-style:solid;
+    border-width:5px;
+    resize: vertical;
+}
+
+.conflict {
+    height: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: None;
+}
+
+.conflictH1 {
+    font-size: 20px;
+    font-weight: bold;
+}

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="700"
+   height="828.71527"
+   viewBox="0 0 7 8.2871527"
+   id="svg3004"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="waliki_logo.svg">
+  <metadata
+     id="metadata3024">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs3022" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="712"
+     id="namedview3020"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="0.27375134"
+     inkscape:cx="293.30742"
+     inkscape:cy="45.202032"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3004" />
+  <g
+     id="g3089"
+     inkscape:export-filename="/home/juan/proyectos/yatel_wiki/res/favicon.png"
+     inkscape:export-xdpi="2.0599999"
+     inkscape:export-ydpi="2.0599999">
+    <path
+       style="fill:#ffffff"
+       inkscape:connector-curvature="0"
+       id="path3006"
+       d="M 0,0 H 7 V 7 H 0" />
+    <path
+       style="fill:#742c64"
+       inkscape:connector-curvature="0"
+       id="path3008"
+       d="M 0,2 V 4 L 3,7 H 5 M 5,0 H 3 L 7,4 V 2" />
+    <path
+       style="fill:#eb7711"
+       inkscape:connector-curvature="0"
+       id="path3010"
+       d="M 1,0 H 3 L 7,4 V 6 M 1,5 H 0 v 2 h 3" />
+    <path
+       style="fill:#fcdd09"
+       inkscape:connector-curvature="0"
+       id="path3012"
+       d="M 1,0 H 2 V 2 H 4 V 4 H 6 V 6 H 7 V 5 H 5 V 3 H 3 V 1 H 1 M 0,6 H 1 V 7 H 0" />
+    <path
+       style="fill:#078930"
+       inkscape:connector-curvature="0"
+       id="path3014"
+       d="M 0,1 V 2 L 5,7 H 6 V 6 H 5 V 5 H 4 V 4 H 3 V 3 H 2 V 2 H 1 V 1 M 5,0 h 2 v 2" />
+    <path
+       style="fill:#0f47af"
+       inkscape:connector-curvature="0"
+       id="path3016"
+       d="M 0,2 H 1 V 4 H 3 V 6 H 5 V 7 H 4 V 5 H 2 V 3 H 0 M 5,0 H 6 V 2 H 7 V 1 H 5" />
+    <path
+       style="fill:#da121a"
+       inkscape:connector-curvature="0"
+       id="path3018"
+       d="M 3,0 H 4 V 2 H 6 V 4 H 7 V 3 H 5 V 1 H 3 M 0,4 H 1 V 6 H 3 V 7 H 2 V 5 H 0" />
+  </g>
+  <text
+     xml:space="preserve"
+     style="font-size:1.44000006px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:80.00000119%;letter-spacing:0.00110102px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial Bold"
+     x="3.5127017"
+     y="7.8134575"
+     id="text3026"
+     sodipodi:linespacing="80.000001%"><tspan
+       sodipodi:role="line"
+       id="tspan3028"
+       x="3.5110407"
+       y="7.8134575"
+       style="font-size:0.72000003px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:80.00000119%;letter-spacing:-0.00332212px;word-spacing:-0.00390101px;text-anchor:middle;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono Bold"
+       dx="0">W A L I K I</tspan><tspan
+       sodipodi:role="line"
+       x="3.5110407"
+       y="8.3894577"
+       style="font-size:0.72000003px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:80.00000119%;letter-spacing:-0.00332212px;word-spacing:-0.00390101px;text-anchor:middle;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono Bold"
+       dx="0 0 0 0 0 0 0 0 0 0 0 0"
+       id="tspan3085">===========</tspan></text>
+</svg>

@@ -1,27 +1,35 @@
+
 **Waliki** is an extensible wiki engine based on Flask.
 
-
 :home: https://github.com/mgaitan/waliki/
-:doc and demo: http://waliki.nqnwebs.com
+:documentation: http://waliki.rtfd.org (under development)
+:demo: http://waliki.nqnwebs.com
+:discussion group: https://groups.google.com/forum/#!forum/waliki-devs
 :license: `BSD <https://github.com/mgaitan/waliki/blob/master/LICENSE>`_
 
-Waliki is a fork of Alexander Jung's `wiki <https://github.com/alexex/wiki>`_ project with few improvements:
+At a glance, Waliki has:
 
-- Extensible architecture
-- A pluggable Git backend: version control for your content!
-- reStructuredText support
+- File based content. No database is required (but optional)
+- An extensible architecture: almost everything is a plugin
+- version control for your content using git or mercurial
+- markdown or reStructuredText support
 - simple caching
-- autolinking of internal pages (in reST)
-- an attempt of UI improve.
+- UI based on bootstrap
 
 Why "Waliki" ?
 ----------------
 
 **Waliki** is an `Aymara <http://en.wikipedia.org/wiki/Aymara_language>`_ word
-that means *All right*, *Fine*.
+that means *all right*, *fine*.
 
-It has punch, sounds a bit like *Wiki*, has a meaningful sense for this project
-and also plays with the idea of using a "non mainstream" language (*wiki* a hawaiian word)
+It sounds a bit like *Wiki*, has a meaningful sense for this project
+and also plays with the idea of using a "non mainstream" language [1]_ .
 
-And last but not less important, it's a humble tribute to bolivian President Evo Morales
-who was `kidnapped <http://www.guardian.co.uk/world/2013/jul/03/bolivia-un-evo-morales-plane>`_ in Europe.
+And last but not less important, it's a humble tribute to bolivian `President Evo Morales Ayma <http://en.wikipedia.org/wiki/Evo_Morales>`_
+
+.. [1] *wiki* itself is a hawaiian word
+
+Credits
+--------
+
+Waliki started as a fork of Alexander Jung's `wiki <https://github.com/alexex/wiki>`_ project.

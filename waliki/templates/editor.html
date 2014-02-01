@@ -19,7 +19,10 @@
 
 {% block precontent %}
     {% if conflict %}
-        <div class="conflict-container">
+        <div class="conflict-container alert alert-warning">
+            <a href="" class="btn-waring pull-right" data-dismiss="alert">
+                <i class="icon-remove"></i>
+            </a>
             <div class="loading text-center">
                 <img src="{{ url_for('static', filename='img/loading.gif')}}"/>
                 <br/>

@@ -1,3 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2013-2014, Martín Gaitán
+# Copyright (c) 2012-2013, Alexander Jung-Loddenkemper
+# This file is part of Waliki (http://waliki.nqnwebs.com/)
+# License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
+
+
+#===============================================================================
+# DOCS
+#===============================================================================
+
+"""All supported markups
+
+"""
+
+#===============================================================================
+# IMPORTS
+#===============================================================================
+
 import re
 import docutils.core
 import docutils.io
@@ -9,11 +30,9 @@ from rst2html5 import HTML5Writer
 import wiki
 
 
-"""
-    Markup classes
-    ~~~~~~~~~~~~~~
-"""
-
+#===============================================================================
+# MARKUP BASE
+#===============================================================================
 
 class Markup(object):
     """ Base markup class."""
@@ -41,6 +60,10 @@ class Markup(object):
     def howto(cls):
         return cls(textwrap.dedent(cls.HOWTO)).process()[0]
 
+
+#===============================================================================
+# MARKDOWN
+#===============================================================================
 
 class Markdown(Markup):
     NAME = 'markdown'
@@ -82,6 +105,10 @@ class Markdown(Markup):
         meta = md.Meta
         return html, body, meta
 
+
+#===============================================================================
+# RESTRUCTURED TEXT
+#===============================================================================
 
 class RestructuredText(Markup):
     NAME = 'restructuredtext'
@@ -195,3 +222,11 @@ class RestructuredText(Markup):
                 except KeyError:
                     meta[key] = [value]
         return meta
+
+
+#===============================================================================
+# MAIN
+#===============================================================================
+
+if __name__ == "__main__":
+    print(__doc__)

@@ -1,6 +1,27 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# Copyright (c) 2013-2014, Martín Gaitán
+# Copyright (c) 2012-2013, Alexander Jung-Loddenkemper
+# This file is part of Waliki (http://waliki.nqnwebs.com/)
+# License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
+
+#===============================================================================
+# DOCS
+#===============================================================================
+
+"""Waliki itself!
+
+"""
+
+
+#===============================================================================
+# IMPORTS
+#===============================================================================
+
 import os
 import re
+import importlib
 
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
@@ -36,15 +57,14 @@ CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
 
 PERMISSIONS_PUBLIC = "public"
 PERMISSIONS_PROTECTED = "protected"
+PERMISSIONS_SECURE = "secure"
 PERMISSIONS_PRIVATE = "private"
-PERMISIONS_MAFIA = "mafia"
 DEFAULT_PERMISSIONS = PERMISSIONS_PUBLIC
 
 
 #===============================================================================
 # THE CODE
 #===============================================================================
-
 
 def user_can_edit(can_modify=True):
     pers = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS)
@@ -53,7 +73,7 @@ def user_can_edit(can_modify=True):
     elif pers == PERMISSIONS_PROTECTED:
         if can_modify and not current_user.is_authenticated():
             return False
-    elif pers in (PERMISSIONS_PRIVATE, PERMISIONS_MAFIA):
+    elif pers in (PERMISSIONS_SECURE, PERMISSIONS_PRIVATE):
         if not current_user.is_authenticated():
             return False
     return True
@@ -71,11 +91,9 @@ def protect(can_modify):
     return _dec
 
 
-"""
-    Forms
-    ~~~~~
-"""
-
+#===============================================================================
+# FORMS
+#===============================================================================
 
 class ForbiddenUrlError(ValueError):
 
@@ -168,10 +186,9 @@ class SignupForm(Form):
             raise ValidationError('The password is too short')
 
 
-"""
-    Application Setup
-    ~~~~~~~~~
-"""
+#===============================================================================
+# APPLICATION SETUP
+#===============================================================================
 
 app = Flask(__name__)
 app.debug = True
@@ -409,12 +426,14 @@ def user_index():
 def user_signup():
     form = SignupForm()
     if form.validate_on_submit():
-        active_user = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS) != PERMISIONS_MAFIA
+        active_user = app.config.get('PERMISSIONS', DEFAULT_PERMISSIONS) != PERMISSIONS_PRIVATE
         app.users.add_user(form.name.data, form.password.data,
                            form.full_name.data, form.email.data, active_user,
                            authentication_method=get_default_authentication_method())
         flash('You were registered successfully. Please login now.', 'success')
-        return redirect(request.args.get("next") or url_for('index'))
+        if not active_user:
+            flash('Your user is inactive by default, please contact the wiki admin', 'error')
+        return redirect(request.args.get('next') or url_for('index'))
     return render_template('signup.html', form=form)
 
 
@@ -428,10 +447,19 @@ def user_delete(user_id):
     pass
 
 
-# Load extensions
+#===============================================================================
+# LOAD EXTENSIONS
+#===============================================================================
+
 for ext in app.config.get('EXTENSIONS', []):
-    mod = __import__('extensions.%s' % ext, fromlist=['init'])
+    modname = 'waliki.extensions.{ext}'.format(ext=ext)
+    mod = importlib.import_module(modname)
     mod.init(app)
 
-if __name__ == '__main__':
-    app.manager.run()
+
+#===============================================================================
+# MAIN
+#===============================================================================
+
+if __name__ == "__main__":
+    print(__doc__)

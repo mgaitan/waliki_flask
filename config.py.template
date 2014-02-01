@@ -16,11 +16,12 @@ MARKUP = 'restructuredtext'
 # PERMISSIONS can be:
 #   public: everybody can read and write a page (default)
 #   protected: anyone can view but only registered users can write
-#   private: only registered users can see this wiki
+#   secure: only registered users can see this wiki
+#   private: all the users are created inactive
 PERMISSIONS = 'public'
 
 # Can be HTML
-CUSTOM_FOOTER = 'All content is under <a href="https://raw2.github.com/mgaitan/waliki/master/README.rst">This</a> license'
+CUSTOM_FOOTER = 'Powered by <a href="http://waliki.nqnwebs.com/"> Waliki</a>'
 
 # This logo is show on the left side of te title
 NAV_BAR_ICON = 'res/logo.png'

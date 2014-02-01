@@ -3,6 +3,7 @@ import binascii
 import hashlib
 import os
 import re
+import shutil
 import textwrap
 import markdown
 import docutils.core
@@ -11,15 +12,42 @@ import json
 from rst2html5 import HTML5Writer
 from functools import wraps
 from flask import (Flask, render_template, flash, redirect, url_for, request,
-                   abort)
+                   abort, send_from_directory)
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
 from flask.ext.script import Manager
 from flask.ext.wtf import Form
-from wtforms import (TextField, TextAreaField, PasswordField)
+from wtforms import (TextField, TextAreaField, PasswordField, HiddenField)
 from wtforms.validators import (Required, ValidationError, Email)
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
+
+
+#===============================================================================
+# SOME CONSTANTS
+#===============================================================================
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR = os.path.join(PROJECT_ROOT, "_data")
+CONTENT_DIR = os.path.join(DATA_DIR, "content")
+CACHE_DIR = os.path.join(DATA_DIR, "cache")
+
+CUSTOM_STATICS_DIR_NAME = "_custom"
+CONFIG_FILE_PATH = os.path.join(PROJECT_ROOT, "config.py")
+
+CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
+
+PERMISSIONS_PUBLIC = "public"
+PERMISSIONS_PROTECTED = "protected"
+PERMISSIONS_PRIVATE = "private"
+PERMISIONS_MAFIA = "mafia"
+DEFAULT_PERMISSIONS = PERMISSIONS_PUBLIC
+
+
+#===============================================================================
+# THE CODE
+#===============================================================================
+
 
 """
     Markup classes
@@ -292,6 +320,17 @@ class Page(object):
     def tags(self, value):
         self['tags'] = value
 
+    @property
+    def checksum(self):
+        seed = (self.html.encode("utf8") +
+                self.title.encode("utf8") +
+                unicode(self.tags).encode("utf8"))
+        return hashlib.sha256(seed).hexdigest()
+
+    @checksum.setter
+    def checksum(self, cs):
+        pass
+
 
 class Wiki(object):
     def __init__(self, root, markup=Markdown):
@@ -324,10 +363,12 @@ class Wiki(object):
         return Page(path, url, new=True, markup=self.markup)
 
     def move(self, url, newurl):
-        os.rename(
-            os.path.join(self.root, url) + self.markup.EXTENSION,
-            os.path.join(self.root, newurl) + self.markup.EXTENSION
-        )
+        fromfile = os.path.join(self.root, url) + self.markup.EXTENSION
+        tofile = os.path.join(self.root, newurl) + self.markup.EXTENSION
+        todir = os.path.dirname(tofile)
+        if not os.path.exists(todir):
+            os.makedirs(todir)
+        shutil.move(fromfile, tofile)
 
     def delete(self, url):
         path = self.path(url)
@@ -337,7 +378,10 @@ class Wiki(object):
         return True
 
     def index(self, attr=None):
+
         def _walk(directory, path_prefix=()):
+            if not os.path.exists(directory):
+                os.makedirs(directory)
             for name in os.listdir(directory):
                 fullname = os.path.join(directory, name)
                 if os.path.isdir(fullname):
@@ -438,15 +482,8 @@ class UserManager(object):
             'full_name': full_name,
             'email': email
         }
-        # Currently we have only two authentication_methods: cleartext and
-        # hash. If we get more authentication_methods, we will need to go to a
-        # strategy object pattern that operates on User.data.
-        if authentication_method == 'hash':
-            new_user['hash'] = make_salted_hash(password)
-        elif authentication_method == 'cleartext':
-            new_user['password'] = password
-        else:
-            raise NotImplementedError(authentication_method)
+        new_user['password'] = app.make_password(authentication_method,
+                                                 password)
         users[name] = new_user
         self.write(users)
         userdata = users.get(name)
@@ -504,16 +541,9 @@ class User(object):
         """Return True, return False, or raise NotImplementedError if the
         authentication_method is missing or unknown."""
         authentication_method = self.data.get('authentication_method', None)
-        if authentication_method is None:
-            authentication_method = get_default_authentication_method()
-        # See comment in UserManager.add_user about authentication_method.
-        if authentication_method == 'hash':
-            result = check_hashed_password(password, self.get('hash'))
-        elif authentication_method == 'cleartext':
-            result = (self.get('password') == password)
-        else:
-            raise NotImplementedError(authentication_method)
-        return result
+        user_password = self.get('password')
+        return app.check_password(authentication_method,
+                                  user_password, password)
 
 
 def get_default_authentication_method():
@@ -521,41 +551,93 @@ def get_default_authentication_method():
 
 
 def make_salted_hash(password, salt=None):
-    if not salt:
-        salt = os.urandom(64)
-    d = hashlib.sha512()
-    d.update(salt[:32])
-    d.update(password)
-    d.update(salt[32:])
-    return binascii.hexlify(salt) + d.hexdigest()
+        if not salt:
+            salt = os.urandom(64)
+        d = hashlib.sha512()
+        d.update(salt[:32])
+        d.update(password)
+        d.update(salt[32:])
+        return binascii.hexlify(salt) + d.hexdigest()
 
 
-def check_hashed_password(password, salted_hash):
-    salt = binascii.unhexlify(salted_hash[:128])
-    return make_salted_hash(password, salt) == salted_hash
+def make_password(authmethod, password):
+
+    if authmethod == "hash":
+        return make_salted_hash(password)
+    elif authmethod == "cleartext":
+        return password
 
 
-def protect(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if app.config.get('PRIVATE') and not current_user.is_authenticated():
-            return loginmanager.unauthorized()
-        return f(*args, **kwargs)
-    return wrapper
+def check_password(authmethod, upassword, password):
 
+    def check_hashed_password(password, salted_hash):
+        salt = binascii.unhexlify(salted_hash[:128])
+        return make_salted_hash(password, salt) == salted_hash
+
+    if authmethod == "hash":
+        return check_hashed_password(password, upassword)
+    elif authmethod == "cleartext":
+        return password == upassword
+    return False
+
+
+def user_can_edit(can_modify=True):
+    pers = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS)
+    if pers == PERMISSIONS_PUBLIC:
+        return True
+    elif pers == PERMISSIONS_PROTECTED:
+        if can_modify and not current_user.is_authenticated():
+            return False
+    elif pers in (PERMISSIONS_PRIVATE, PERMISIONS_MAFIA):
+        if not current_user.is_authenticated():
+            return False
+    return True
+
+
+def protect(can_modify):
+    """If can_modify is True this view can modify the wiky"""
+    def _dec(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if not user_can_edit(can_modify):
+                return app.loginmanager.unauthorized()
+            return f(*args, **kwargs)
+        return wrapper
+    return _dec
 
 """
     Forms
     ~~~~~
 """
 
+class ForbiddenUrlError(ValueError):
+
+    def __init__(self, invalidpart, url):
+        self.invalidpart = invalidpart
+        self.url = url
+        super(ForbiddenUrlError, self).__init__(
+            "You can't create a page inside '{0}': {1}".format(invalidpart, url)
+        )
+
+    @property
+    def redirect(self):
+        if self.invalidpart.startswith("_"):
+            idx = self.url.index(self.invalidpart)
+            return "/" + self.url[:idx]
+        return self.invalidpart
+
 
 def urlify(url, protect_specials_url=True):
     # Cleans the url and corrects various errors.
     # Remove multiple spaces and leading and trailing spaces
-    if (protect_specials_url and
-            re.match(r'^(?i)(user|tag|create|search|index)', url)):
-        url = '-' + url
+    if protect_specials_url:
+        if re.match(r'^(?i)(user|tag|create|search|index)', url):
+            invalid = url.replace('\\\\', '/').replace('\\', '/').split("/", 1)[0]
+            raise ForbiddenUrlError(invalid, url)
+        for p in url.replace('\\\\', '/').replace('\\', '/').split("/"):
+            if p in ("_edit"):
+                raise ForbiddenUrlError(p, url)
+
     pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
     pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')
     # Corrects Windows style folders
@@ -583,6 +665,7 @@ class EditorForm(Form):
     body = TextAreaField('', [Required()])
     tags = TextField('')
     message = TextField('')
+    checksum = HiddenField()
 
 
 class LoginForm(Form):
@@ -590,12 +673,12 @@ class LoginForm(Form):
     password = PasswordField('Password', [Required()])
 
     def validate_name(form, field):
-        user = users.get_user(field.data)
+        user = app.users.get_user(field.data)
         if not user:
             raise ValidationError('This username does not exist.')
 
     def validate_password(form, field):
-        user = users.get_user(form.name.data)
+        user = app.users.get_user(form.name.data)
         if not user:
             return
         if not user.check_password(field.data):
@@ -609,7 +692,7 @@ class SignupForm(Form):
     password = PasswordField('Password', [Required()])
 
     def validate_name(form, field):
-        user = users.get_user(field.data)
+        user = app.users.get_user(field.data)
         if user:
             raise ValidationError('This username is already taken')
 
@@ -625,23 +708,22 @@ class SignupForm(Form):
 
 app = Flask(__name__)
 app.debug = True
-app.config['CONTENT_DIR'] = os.path.abspath('content')
+app.config['PROJECT_ROOT'] = PROJECT_ROOT
+app.config['CONTENT_DIR'] = CONTENT_DIR
+app.config['DATA_DIR'] = DATA_DIR
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
-app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
+app.config['EDITOR_THEME'] = 'monokai'  # more at necul/static/codemirror/theme
+app.config['CUSTOM_STATICS_DIR_NAME'] = CUSTOM_STATICS_DIR_NAME
+app.config['CUSTOM_STATICS'] = {}
 try:
-    app.config.from_pyfile(
-        os.path.join(app.config.get('CONTENT_DIR'), 'config.py')
-    )
+    app.config.from_pyfile(CONFIG_FILE_PATH)
 except IOError:
     print ("Startup Failure: You need to place a "
            "config.py in your content directory.")
 
-CACHE_DIR = os.path.join(app.config.get('CONTENT_DIR'), 'cache')
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
                             'CACHE_DIR': CACHE_DIR})
-manager = Manager(app)
-
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
@@ -656,14 +738,36 @@ wiki = Wiki(app.config.get('CONTENT_DIR'), markup)
 app.wiki = wiki
 app.signals = wiki_signals
 app.EditorForm = EditorForm
+app.loginmanager = loginmanager
+app.manager = Manager(app)
+app.users = UserManager(app.config.get('DATA_DIR'))
+app.check_password = check_password
+app.make_password = make_password
+
+app.jinja_env.globals.update(user_can_edit=user_can_edit)
+
+#===============================================================================
+# VARIABLE STATIC FILE
+#===============================================================================
+
+for cs in CUSTOM_STATICS_LIST:
+    csvalue = app.config.get(cs)
+    if csvalue:
+        csbasename = os.path.basename(csvalue)
+        cspath = csvalue \
+                 if os.path.isabs(cs) else \
+                 os.path.join(PROJECT_ROOT, csvalue)
+        app.config['CUSTOM_STATICS'][csbasename] = os.path.dirname(cspath)
+        app.config[cs] = csbasename
 
 
-users = UserManager(app.config.get('CONTENT_DIR'))
-
+#===============================================================================
+# ROUTES
+#===============================================================================
 
 @loginmanager.user_loader
 def load_user(name):
-    return users.get_user(name)
+    return app.users.get_user(name)
 
 
 """
@@ -671,9 +775,14 @@ def load_user(name):
     ~~~~~~
 """
 
+@app.route('/custom_static/<path:filename>')
+def custom_static(filename):
+    path = app.config["CUSTOM_STATICS"][filename]
+    return send_from_directory(path, filename)
+
 
 @app.route('/')
-@protect
+@protect(False)
 def home():
     page = wiki.get('home')
     if page:
@@ -682,27 +791,35 @@ def home():
 
 
 @app.route('/index/')
-@protect
+@protect(False)
 def index():
     pages = wiki.index()
     return render_template('index.html', pages=pages)
 
 
 @app.route('/<path:url>/')
-@protect
+@protect(False)
 def display(url):
     page = wiki.get(url)
     if not page:
-        flash('The page "{0}" does not exist, '
-              'feel free to make it now!'.format((url)), 'warning')
-        return redirect(url_for('edit', url=urlify(url)))
+        try:
+            pretyurl = urlify(url)
+        except ForbiddenUrlError as err:
+            flash(err.message, 'error')
+            if "/" in err.redirect:
+                return redirect(err.redirect)
+            return redirect(url_for(err.redirect))
+        else:
+            flash('The page "{0}" does not exist, '
+                  'feel free to make it now!'.format((url)), 'warning')
+            return redirect(url_for('edit', url=pretyurl))
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
     return render_template('page.html', page=page, **extra_context)
 
 
 @app.route('/create/', methods=['GET', 'POST'])
-@protect
+@protect(True)
 def create():
     form = URLForm()
     if form.validate_on_submit():
@@ -711,29 +828,37 @@ def create():
 
 
 @app.route('/<path:url>/_edit', methods=['GET', 'POST'])
-@protect
+@protect(True)
 def edit(url):
     page = wiki.get(url)
     form = EditorForm(obj=page)
+    checksum = page.checksum if page else ""
+    conflict = None
     if form.validate_on_submit():
-        if not page:
-            page = wiki.get_bare(url)
-        form.populate_obj(page)
-        page.save()
-        page.delete_cache()
-        page_saved.send(page,
-                        user=current_user,
-                        message=form.message.data.encode('utf-8'))
-        flash('"%s" was saved.' % page.title, 'success')
-        return redirect(url_for('display', url=url))
+        if checksum != form.checksum.data:
+            flash('The document are chaged see the new version in the upper frame',
+                  'error')
+            conflict = render_template('page.html', page=page)
+        else:
+            if not page:
+                page = wiki.get_bare(url)
+            form.populate_obj(page)
+            page.save()
+            page.delete_cache()
+            page_saved.send(page,
+                            user=current_user,
+                            message=form.message.data.encode('utf-8'))
+            flash('"%s" was saved.' % page.title, 'success')
+            return redirect(url_for('display', url=url))
+    form.checksum.data = checksum
     extra_context = {}
     pre_edit.send(page, url=url, user=current_user, extra_context=extra_context)
-    return render_template('editor.html', form=form, page=page,
+    return render_template('editor.html', form=form, page=page, conflict=conflict,
                            markup=markup, **extra_context)
 
 
 @app.route('/preview/', methods=['POST'])
-@protect
+@protect(True)
 def preview():
     a = request.form
     data = {}
@@ -742,7 +867,7 @@ def preview():
 
 
 @app.route('/<path:url>/_move', methods=['GET', 'POST'])
-@protect
+@protect(True)
 def move(url):
     page = wiki.get_or_404(url)
     form = URLForm(obj=page)
@@ -754,7 +879,7 @@ def move(url):
 
 
 @app.route('/<path:url>/_delete', methods=['POST'])
-@protect
+@protect(True)
 def delete(url):
     page = wiki.get_or_404(url)
     wiki.delete(url)
@@ -763,21 +888,21 @@ def delete(url):
 
 
 @app.route('/tags/')
-@protect
+@protect(False)
 def tags():
     tags = wiki.get_tags()
     return render_template('tags.html', tags=tags)
 
 
 @app.route('/tag/<string:name>/')
-@protect
+@protect(False)
 def tag(name):
     tagged = wiki.index_by_tag(name)
     return render_template('tag.html', pages=tagged, tag=name)
 
 
 @app.route('/search/', methods=['GET', 'POST'])
-@protect
+@protect(False)
 def search():
     form = SearchForm()
     if form.validate_on_submit():
@@ -791,7 +916,7 @@ def search():
 def user_login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = users.get_user(form.name.data)
+        user = app.users.get_user(form.name.data)
         login_user(user)
         user.set('authenticated', True)
         flash('Login successful.', 'success')
@@ -817,8 +942,10 @@ def user_index():
 def user_signup():
     form = SignupForm()
     if form.validate_on_submit():
-        users.add_user(form.name.data, form.password.data,
-                       form.full_name.data, form.email.data)
+        active_user = app.config.get("PERMISSIONS", DEFAULT_PERMISSIONS) != PERMISIONS_MAFIA
+        app.users.add_user(form.name.data, form.password.data,
+                           form.full_name.data, form.email.data, active_user,
+                           authentication_method=get_default_authentication_method())
         flash('You were registered successfully. Please login now.', 'success')
         return redirect(request.args.get("next") or url_for('index'))
     return render_template('signup.html', form=form)

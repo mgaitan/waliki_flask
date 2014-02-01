@@ -1,17 +1,12 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
-
-<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-
-{% endblock extra_head %}
-
 {% block header %}
 
 <div class="pull-right">
 {% block actions %}
-    <div class="btn-group">
-        <a href="{{ url_for('edit', url=page.url) }}" class="btn">Edit</a>
+    {% if user_can_edit() %}
+    <div class="btn-group actions">
+        <a href="{{ url_for('edit', url=page.url) }}" class="btn"><i class="icon-edit"></i> Edit</a>
         <button class="btn dropdown-toggle" data-toggle="dropdown">
             <span class="caret"></span>
         </button>
@@ -29,6 +24,7 @@
             {% endif %}
         </ul>
     </div>
+    {% endif %}
 {% endblock actions %}
 </div>
 
@@ -41,7 +37,7 @@
 
 {% block content %}
 
-	{{ page }}
+    {{ page }}
  {% if page.footer %}
    <div id="footer">
    <hr>
@@ -63,7 +59,7 @@
 
 <h3>Actions</h3>
 <ul class="nav nav-tabs nav-stacked">
-	<li><a href="{{ url_for('edit', url=page.url) }}">Edit</a></li>
+    <li><a href="{{ url_for('edit', url=page.url) }}">Edit</a></li>
   <li><a href="{{ url_for('move', url=page.url) }}">Move</a></li>
   <li><a href="#confirmDelete" data-toggle="modal" class="text-error">Delete</a></li>
   {% for action, url in extra_actions %}

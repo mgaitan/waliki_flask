@@ -17,69 +17,67 @@
     </div>
 {% endblock %}
 
+{% block precontent %}
+    {% if conflict %}
+        <div class="conflict-container">
+            <div class="loading text-center">
+                <img src="{{ url_for('static', filename='img/loading.gif')}}"/>
+                <br/>
+            </div>
+            <div class="conflict">
+                {{conflict|safe}}
+            </div>
+        </div>
+    {% endif %}
+{%endblock%}
 
 {% block content %}
 
 <div class="row">
-<div class="span10">
-<div class="tabbable tabs-left">
-<ul class="nav nav-tabs">
-	<li class="active"><a href="#editor" data-toggle="tab">Editor</a></li>
-	<li><a href="#preview" data-toggle="tab" id="previewlink">Preview</a></li>
-</ul>
-<div class="tab-content">
-	<div class="tab-pane active" id="editor">
+    <div class="span10">
 
-        <form method="post" class="form">
-			{{ form.hidden_tag() }}
-			{{ input(form.title, placeholder="Title", class="span8") }}
+    <div class="tabbable tabs-left">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#editor" data-toggle="tab">Editor</a></li>
+            <li><a href="#preview" data-toggle="tab" id="previewlink">Preview</a></li>
+        </ul>
+        <div class="tab-content">
+        <div class="tab-pane active" id="editor">
+            <form method="post" class="form">
+                {{ form.hidden_tag() }}
+                {{ input(form.title, placeholder="Title", class="span8") }}
 
+                {{ input(form.body, placeholder=markup.NAME|capitalize, class="span8", rows="15", id="code") }}
 
-			{{ input(form.body, placeholder=markup.NAME|capitalize,
-                     class="span8", rows="15", id="code") }}
+                <div class="row">
+                    <div class="span4">
+                        {{ input(form.message, placeholder="Changes summary (optional)", class="span4") }}
+                    </div>
+                    <div class="span4">
+                        {{ input(form.tags, placeholder="Tags (comma separated)", class="span4") }}
+                    </div>
+                </div>
 
-            <div class="row">
-                <div class="span4">
-            {{ input(form.message, placeholder="Changes summary (optional)", class="span4") }}
-</div>
-                <div class="span4">{{ input(form.tags, placeholder="Tags (comma separated)", class="span4") }}
-            </div></div>
-
-<div class="row">
-    <div class="span8">
-            <div class="form-actions">
-        <div class="pull-left">
-          <a class="btn" href="#preview" id="previewbtn">Preview</a>
+                <div class="row">
+                    <div class="span8">
+                        <div class="form-actions">
+                            <div class="pull-left">
+                                <a class="btn" href="#preview" id="previewbtn">Preview</a>
+                            </div>
+                            <div class="pull-right">
+                                <a class="btn" href="{{ url_for('display', url=page.url) }}">Cancel</a>
+                                <button class="btn btn-success" type="submit">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
-				<div class="pull-right">
-          <a class="btn" href="{{ url_for('display', url=page.url) }}">Cancel</a>
-					<button class="btn btn-success" type="submit">Save</button>
-				</div>
-			</div>
-</div></div>
-
-		</form>
-	</div>
-	<div class="tab-pane" id="preview"></div>
-</div>
-</div>
-
-</div>
-
-
-
-<div id="howto" class="modal hide fade" aria-hidden="true">
-    <div class="modal-header">
-      <h3>Editor How-To</h3>
-    </div>
-    <div class="modal-body">
-        {{ markup.howto()|safe }}
-    </div>
-    <div class="modal-footer">
-      <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Ok, got it</a>
+        <div class="tab-pane" id="preview"></div>
     </div>
 </div>
 
+</div>
 
  <div id="attachments" class="modal hide fade" aria-hidden="true">
     <div class="modal-header">
@@ -94,14 +92,27 @@
   </div>
 
 
-
 {% endblock content %}
+
+{% block modals %}
+<div id="howto" class="modal hide fade" aria-hidden="true">
+    <div class="modal-header">
+      <h3>Editor How-To</h3>
+    </div>
+    <div class="modal-body">
+        {{ markup.howto()|safe }}
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn btn-success" data-dismiss="modal" aria-hidden="true">Ok, got it</a>
+    </div>
+</div>
+{% endblock modals %}
 
 
 {% block postscripts -%}
 {{ super() }}
 $('#previewlink').on('click', function() {
-	var $form = $('.form');
+    var $form = $('.form');
   var $inputs = $form.find('input, textarea, button');
   var $pre = $('#preview');
   var bodycontent = {{ markup.render_meta('title', 'preview')|tojson|safe }} + "\n\n" + editor.getValue();
@@ -116,7 +127,7 @@ $('#previewlink').on('click', function() {
       bootstrap_rst();
     },
     error: function() {
-			$pre.addClass('alert').addClass('alert-error');
+            $pre.addClass('alert').addClass('alert-error');
       $pre.html('There was a problem with the preview.');
     },
     complete: function() {
@@ -125,8 +136,8 @@ $('#previewlink').on('click', function() {
   });
 });
 $('#previewbtn').on('click', function(event) {
-	event.preventDefault();
-	$('#previewlink').click();
+    event.preventDefault();
+    $('#previewlink').click();
 });
 
 
@@ -182,7 +193,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
   }
 });
 
-var theme = '{{ config.THEME }}';
+var theme = '{{ config.EDITOR_THEME }}';
 editor.setOption("theme", theme);
 
 var markLang = '{{ markup.NAME }}';

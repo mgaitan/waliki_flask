@@ -4,3 +4,6 @@ venv
 *.sublime-*
 content/
 docs/_build/
+_data/
+config.py
+*.db

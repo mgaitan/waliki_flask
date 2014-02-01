@@ -1,4 +1,4 @@
-from waliki import manager
+from waliki import app
 
 if __name__ == '__main__':
-    manager.run()
+    app.manager.run()

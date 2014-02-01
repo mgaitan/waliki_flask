@@ -21,7 +21,7 @@ MARKUP = 'restructuredtext'
 PERMISSIONS = 'public'
 
 # Can be HTML
-CUSTOM_FOOTER = 'All content is under <a href="https://raw2.github.com/mgaitan/waliki/master/README.rst">This</a> license'
+CUSTOM_FOOTER = 'Powered by <a href="http://waliki.nqnwebs.com/"> Waliki</a>'
 
 # This logo is show on the left side of te title
 NAV_BAR_ICON = 'res/logo.png'

@@ -24,11 +24,10 @@ import re
 import importlib
 
 from functools import wraps
-from flask import (Flask, render_template, flash, redirect, url_for, request,
+from flask import (render_template, flash, redirect, url_for, request,
                    send_from_directory)
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
-from flask.ext.script import Manager
 from flask.ext.wtf import Form
 from wtforms import (TextField, TextAreaField, PasswordField, HiddenField)
 from wtforms.validators import (Required, ValidationError, Email)
@@ -39,10 +38,12 @@ from users import (UserManager, check_password, make_password,
 import markup
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
+from .core import app
+from .climanager import manager
 
 
 #===============================================================================
-# SOME CONSTANTS
+# CONSTANTS
 #===============================================================================
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -190,7 +191,6 @@ class SignupForm(Form):
 # APPLICATION SETUP
 #===============================================================================
 
-app = Flask(__name__)
 app.debug = True
 app.config['PROJECT_ROOT'] = PROJECT_ROOT
 app.config['CONTENT_DIR'] = CONTENT_DIR
@@ -223,7 +223,7 @@ app.wiki = wiki
 app.signals = wiki_signals
 app.EditorForm = EditorForm
 app.loginmanager = loginmanager
-app.manager = Manager(app)
+app.manager = manager
 app.users = UserManager(app.config.get('DATA_DIR'), app)
 app.check_password = check_password
 app.make_password = make_password

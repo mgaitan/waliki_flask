@@ -18,8 +18,22 @@
 # IMPORTS
 #===============================================================================
 
+import os
+
 import flask
 
+#===============================================================================
+# CONSTANTS
+#===============================================================================
+
+WALIKI_PATH = os.path.abspath(os.path.dirname(__file__))
+
+EXTENSIONS_PATH = os.path.join(WALIKI_PATH, "extensions")
+
+EXTENSIONS = frozenset(
+    os.path.splitext(mn)[0]
+    for mn in os.listdir(EXTENSIONS_PATH) if not mn.startswith("_")
+)
 
 #===============================================================================
 # APP

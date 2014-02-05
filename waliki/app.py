@@ -21,14 +21,12 @@
 
 import os
 import re
-import importlib
 
 from functools import wraps
-from flask import (Flask, render_template, flash, redirect, url_for, request,
+from flask import (render_template, flash, redirect, url_for, request,
                    send_from_directory)
 from flask.ext.login import (LoginManager, login_required, current_user,
                              login_user, logout_user)
-from flask.ext.script import Manager
 from flask.ext.wtf import Form
 from wtforms import (TextField, TextAreaField, PasswordField, HiddenField)
 from wtforms.validators import (Required, ValidationError, Email)
@@ -39,19 +37,24 @@ from users import (UserManager, check_password, make_password,
 import markup
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
+from . import core
+from .climanager import manager
 
 
 #===============================================================================
-# SOME CONSTANTS
+# PATCH FOR BACK COMPATIBILITY
 #===============================================================================
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_DIR = os.path.join(PROJECT_ROOT, "_data")
-CONTENT_DIR = os.path.join(DATA_DIR, "content")
-CACHE_DIR = os.path.join(DATA_DIR, "cache")
+app = core.app
+
+
+#===============================================================================
+# CONSTANTS
+#===============================================================================
+
+CONFIG_FILE_PATH = os.environ.get("WALIKI_CONFIG_MODULE")
 
 CUSTOM_STATICS_DIR_NAME = "_custom"
-CONFIG_FILE_PATH = os.path.join(PROJECT_ROOT, "config.py")
 
 CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
 
@@ -190,24 +193,23 @@ class SignupForm(Form):
 # APPLICATION SETUP
 #===============================================================================
 
-app = Flask(__name__)
 app.debug = True
-app.config['PROJECT_ROOT'] = PROJECT_ROOT
-app.config['CONTENT_DIR'] = CONTENT_DIR
-app.config['DATA_DIR'] = DATA_DIR
-app.config['TITLE'] = 'wiki'
-app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
-app.config['EDITOR_THEME'] = 'monokai'  # more at necul/static/codemirror/theme
-app.config['CUSTOM_STATICS_DIR_NAME'] = CUSTOM_STATICS_DIR_NAME
-app.config['CUSTOM_STATICS'] = {}
 try:
     app.config.from_pyfile(CONFIG_FILE_PATH)
 except IOError:
-    print ("Startup Failure: You need to place a "
-           "config.py in your content directory.")
+    print ("Enviroment variable 'WALIKI_CONFIG_MODULE' not found")
+    sys.exit(1)
+
+app.config['CONTENT_DIR'] = os.path.join(app.config['DATA_DIR'], "content")
+app.config['CACHE_DIR'] = os.path.join(app.config['DATA_DIR'], "cache")
+app.config['WIKI_ROOT'] = os.path.dirname(CONFIG_FILE_PATH)
+app.config['EDITOR_THEME'] = 'monokai'
+app.config['CUSTOM_STATICS_DIR_NAME'] = CUSTOM_STATICS_DIR_NAME
+app.config['CUSTOM_STATICS'] = {}
+
 
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
-                            'CACHE_DIR': CACHE_DIR})
+                            'CACHE_DIR': app.config["CACH_DIR"]})
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
@@ -223,7 +225,7 @@ app.wiki = wiki
 app.signals = wiki_signals
 app.EditorForm = EditorForm
 app.loginmanager = loginmanager
-app.manager = Manager(app)
+app.manager = manager
 app.users = UserManager(app.config.get('DATA_DIR'), app)
 app.check_password = check_password
 app.make_password = make_password
@@ -239,7 +241,7 @@ for cs in CUSTOM_STATICS_LIST:
     if csvalue:
         csbasename = os.path.basename(csvalue)
         cspath = (csvalue if os.path.isabs(cs) else
-                  os.path.join(PROJECT_ROOT, csvalue))
+                  os.path.join(ap.config["WIKI_ROOT"], csvalue))
         app.config['CUSTOM_STATICS'][csbasename] = os.path.dirname(cspath)
         app.config[cs] = csbasename
 
@@ -452,8 +454,7 @@ def user_delete(user_id):
 #===============================================================================
 
 for ext in app.config.get('EXTENSIONS', []):
-    modname = 'waliki.extensions.{ext}'.format(ext=ext)
-    mod = importlib.import_module(modname)
+    mod = core.get_extension(ext)
     mod.init(app)
 
 

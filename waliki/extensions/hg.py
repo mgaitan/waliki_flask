@@ -104,6 +104,9 @@ class CmdHgSync(Command):
 # INITS
 #===============================================================================
 
+REQUIREMENTS = ["hgapi"]
+
+
 def init(app):
     # register plugin
     app.register_blueprint(hgplugin)

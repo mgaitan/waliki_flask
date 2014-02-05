@@ -219,6 +219,8 @@ def deleted():
 # INITIALIZER
 #===============================================================================
 
+REQUIREMENTS = ["GitPython"]
+
 def init(app):
     app.register_blueprint(gitplugin)
     app.signals.signal('page-saved').connect(git_commit)

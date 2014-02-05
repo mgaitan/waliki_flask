@@ -26,6 +26,8 @@ from flask.ext.cache import Cache
 # INITIALIZATION
 #===============================================================================
 
+REQUIREMENTS = []
+
 def init():
     pass
 

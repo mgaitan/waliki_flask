@@ -14,9 +14,3 @@ gunicorn==0.14.6
 wsgiref==0.1.2
 docutils==0.10
 rst2html5
-GitPython==0.3.2.RC1
-rst2pdf
-Flask-Uploads
-hgapi
-peewee
-flask-peewee

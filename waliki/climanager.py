@@ -44,7 +44,7 @@ manager = script.Manager(core.app)
 # CONSTANTS
 #===============================================================================
 
-WALIKIPY_FILENAME = "run.py"
+WALIKIPY_FILENAME = "wmanager.py"
 
 WALIKIPY_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
 # -*- coding: utf-8 -*-

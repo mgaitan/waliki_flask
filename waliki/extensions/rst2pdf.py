@@ -51,6 +51,8 @@ def extra_action(page, **extra):
 # INITIALIZATION
 #===============================================================================
 
+REQUIREMENTS = ["rst2pdf"]
+
 def init(app):
     if app.config.get('MARKUP') == 'restructuredtext':
         app.register_blueprint(pdf)

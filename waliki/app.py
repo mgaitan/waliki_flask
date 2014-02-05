@@ -21,7 +21,6 @@
 
 import os
 import re
-import importlib
 
 from functools import wraps
 from flask import (render_template, flash, redirect, url_for, request,
@@ -38,8 +37,15 @@ from users import (UserManager, check_password, make_password,
 import markup
 from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
-from .core import app
+from . import core
 from .climanager import manager
+
+
+#===============================================================================
+# PATCH FOR BACK COMPATIBILITY
+#===============================================================================
+
+app = core.app
 
 
 #===============================================================================
@@ -452,8 +458,7 @@ def user_delete(user_id):
 #===============================================================================
 
 for ext in app.config.get('EXTENSIONS', []):
-    modname = 'waliki.extensions.{ext}'.format(ext=ext)
-    mod = importlib.import_module(modname)
+    mod = core.get_extension(ext)
     mod.init(app)
 
 

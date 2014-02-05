@@ -7,7 +7,6 @@
 # License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
 
 
-from waliki.app import app
-
 if __name__ == '__main__':
-    app.manager.run()
+    import waliki
+    waliki.run(load_config=False)

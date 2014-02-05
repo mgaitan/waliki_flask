@@ -71,6 +71,8 @@ def extra_actions(page, **extra):
 # INITIALIZER
 #===============================================================================
 
+REQUIREMENTS = ["Flask-Uploads"]
+
 def init(app):
     app.register_blueprint(uploads)
     configure_uploads(app, media)

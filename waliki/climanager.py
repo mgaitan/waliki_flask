@@ -23,6 +23,9 @@ import os
 import random
 import hashlib
 import time
+import codecs
+
+import jinja2
 
 from flask.ext import script
 
@@ -40,8 +43,27 @@ manager = script.Manager(core.app)
 # CONSTANTS
 #===============================================================================
 
-CONFIG_TEMPLATE_VARS = u"""
-# encoding: utf-8
+WALIKI_FILENAME = "waliki.py"
+
+WALIKI_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
+import os
+import sys
+
+CONFIG_PATH = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)),
+    "config.py"
+)
+
+if __name__ == "__main__":
+    os.environ.setdefault("WALIKI_CONFIG_MODULE", CONFIG_PATH)
+    from waliki.app import app
+    app.manager.run()
+""")
+
+
+CONFIG_FILENAME = "config.py"
+
+CONFIG_TEMPLATE = jinja2.Template(u"""# encoding: utf-8
 
 # Title of the wiki
 TITLE = '{{title}}'
@@ -50,15 +72,17 @@ TITLE = '{{title}}'
 SECRET_KEY = '{{secret_key}}'
 
 # The extensions are the name of the files inside 'extension folder'
-EXTENSIONS = [
-    {% for ext in extensions %}
-    'ext'
-    {% endfor %}
-]
+EXTENSIONS = (
+    {%- for ext in extensions %}
+    '{{ext}}'
+    {%- endfor %}
+)
+
+# DATADIR
+DATA_DIR = '{{datadir}}'
 
 # restructuredtext or markdown
 MARKUP = '{{ markup }}'
-
 
 # PERMISSIONS can be:
 #   public: everybody can read and write a page (default)
@@ -79,15 +103,24 @@ FAVICON = '{{favicon}}'
 # Used as base theme (Bootstrap 2.x)
 # amelia, cosmo, cyborg, slate, cerulean, flatly, journal, readable, simplex,
 # united, spacelab
-{-% if bootswatch %}
+{%- if bootswatch %}
 # BOOTSWATCH_THEME = 'simplex'
-{-% else %}
+{%- else %}
 BOOTSWATCH_THEME = '{{bootswatch}}'
-{-% endif %}
+{%- endif %}
 
 # The custom css is the last one to be aplied to the style
 CUSTOM_CSS = '{{custom_css}}'
-"""
+
+""")
+
+REQUIREMENTS_FILE = "requirements.txt"
+
+REQUIREMENTS_TEMPLATE = jinja2.Template("""
+{%- for r in requirements %}
+{{r}}
+{%- endfor %}
+""".strip())
 
 CONFIG_OPTIONS = (
     {
@@ -100,6 +133,12 @@ CONFIG_OPTIONS = (
         "var": "secret_key",
         "no_prompt": True,
         "default": lambda bn, fp: make_secret_key(),
+    },
+    {
+        "var": "data_dir",
+        "prompt": "The name of the directory to store your pages",
+        "default": lambda bn, fp: "_data",
+        "validator": lambda v: os.path.sep not in v
     },
     {
         "var": "markup",
@@ -155,7 +194,7 @@ def create_wiki(dest):
            "\n"
            "Please enter values for the following settings (just press Enter\n"
            "to accept a default value, if one is given in brackets).\n")
-    context = {}
+    config_context = {}
     for option in CONFIG_OPTIONS:
         var = option["var"]
         default = option["default"](basename, fulldest)
@@ -174,9 +213,13 @@ def create_wiki(dest):
                     if not value:
                         value = default
                         break
-        context[var] = value
+        try:
+            config_context[var] = unicode(value) if value else value
+        except Exception as err:
+            import ipdb; ipdb.set_trace()
 
     extensions = []
+    requirements = []
     print "\nExtensions:"
     for ext in core.EXTENSIONS:
         enable = raw_input("Enable '{}'? [No]:  ".format(ext))
@@ -185,7 +228,21 @@ def create_wiki(dest):
                 enable = raw_input("Please write 'yes', 'no' or empty :")
             if enable.lower() == "yes":
                 extensions.append(ext)
-    context["extensions"] = extensions
+                requirements.extend(core.get_extension_requirements(ext))
+    config_context["extensions"] = extensions
+
+    os.makedirs(fulldest)
+
+    config_fpath = os.path.join(fulldest, CONFIG_FILENAME)
+    with codecs.open(config_fpath, "w", encoding="utf8") as fp:
+        fp.write(CONFIG_TEMPLATE.render(config_context))
+    requirements_fpath = os.path.join(fulldest, REQUIREMENTS_FILE)
+    with codecs.open(requirements_fpath, "w", encoding="utf8") as fp:
+        fp.write(REQUIREMENTS_TEMPLATE.render(requirements=requirements))
+
+    print("Your Wiki is ready!")
+
+
 
 
 
@@ -197,15 +254,12 @@ def create_wiki(dest):
 def make_secret_key():
     buff = []
 
-    chars = list("!|#$%&/¿?+*@-_abcdefghijklmnopqrtsuvwxyz")
+    chars = list("+-*?!~@abcdefghijklmnopqrtsuvwxyz")
     for idx in range(10):
         buff.append(random.choice(chars))
 
     seed = str(random.random())
     buff += list(hashlib.sha1(seed).hexdigest())
-
-    buff += list(str(time.time()))
-
 
     for idx, char in  enumerate(buff):
         if random.choice([True, False]):

@@ -186,6 +186,8 @@ class CMDImportJSONUsers(Command):
 # INITS
 #===============================================================================
 
+REQUIREMENTS = ["peewee", "flask-peewee"]
+
 def init(app):
     app.register_blueprint(peewee_user_plugin)
     db = Database(app)

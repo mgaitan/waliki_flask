@@ -19,8 +19,10 @@
 #===============================================================================
 
 import os
+import importlib
 
 import flask
+
 
 #===============================================================================
 # CONSTANTS
@@ -35,11 +37,26 @@ EXTENSIONS = frozenset(
     for mn in os.listdir(EXTENSIONS_PATH) if not mn.startswith("_")
 )
 
+
 #===============================================================================
 # APP
 #===============================================================================
 
 app = flask.Flask(__name__)
+
+
+#===============================================================================
+# FUNCTIONS
+#===============================================================================
+
+def get_extension(ext):
+    modname = 'waliki.extensions.{ext}'.format(ext=ext)
+    mod = importlib.import_module(modname)
+    return mod
+
+
+def get_extension_requirements(ext):
+    return get_extension(ext).REQUIREMENTS
 
 
 #===============================================================================

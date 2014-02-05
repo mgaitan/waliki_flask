@@ -35,6 +35,27 @@ STR_VERSION = ".".join(VERSION)
 
 
 #===============================================================================
+# FUNCTIONS
+#===============================================================================
+
+def get_manager(load_config):
+    """Returns the waliki script manager.
+
+    :param load_config: if True try to load the config from enviroment
+
+    """
+    if load_config:
+        from . import app
+    from . import climanager
+    return climanager.manager
+
+
+def run(load_config):
+    manager = get_manager(load_config)
+    manager.run()
+
+
+#===============================================================================
 # MAIN
 #===============================================================================
 

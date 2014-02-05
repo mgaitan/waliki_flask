@@ -51,6 +51,11 @@ def get_manager(load_config):
 
 
 def run(load_config):
+    """Runs waliki.
+
+    :param load_config: if True try to load the config from enviroment
+
+    """
     manager = get_manager(load_config)
     manager.run()
 

@@ -29,9 +29,31 @@ At a glance, Waliki has:
 
 """
 
+PRJ = "Waliki"
+
 VERSION = ("0", "2", "dev")
 
 STR_VERSION = ".".join(VERSION)
+
+DESCRIPTION = __doc__
+
+SHORT_DESCRIPTION = DESCRIPTION.splitlines()[0].strip()
+
+AUTHOR = "Martín Gaitan"
+
+EMAIL = "gaitan@gmail.com"
+
+URL = "http://waliki.nqnwebs.com/"
+
+LICENSE = "BSD"
+
+KEYWORDS = "wiki restructuredtext markdown"
+
+CLASSIFIERS = (
+    "Topic :: Utilities",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 2",
+)
 
 
 #===============================================================================
@@ -50,7 +72,7 @@ def get_manager(load_config):
     return climanager.manager
 
 
-def run(load_config):
+def run(load_config=False):
     """Runs waliki.
 
     :param load_config: if True try to load the config from enviroment

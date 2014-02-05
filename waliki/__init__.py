@@ -60,6 +60,17 @@ def run(load_config):
     manager.run()
 
 
+def get_app(load_config):
+    """Returns waliki application
+
+    :param load_config: if True try to load the config from enviroment
+
+    """
+    if load_config:
+        from . import app
+    from .import core
+    return core.app
+
 #===============================================================================
 # MAIN
 #===============================================================================

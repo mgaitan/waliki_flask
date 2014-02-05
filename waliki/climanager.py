@@ -56,7 +56,6 @@ WALIKIPY_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
 
 
 import os
-import sys
 
 CONFIG_PATH = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
@@ -67,6 +66,33 @@ if __name__ == "__main__":
     os.environ.setdefault("WALIKI_CONFIG_MODULE", CONFIG_PATH)
     import waliki
     waliki.run(load_config=True)
+""")
+
+
+WSGI_FILENAME = "wsgi.py"
+
+WSGI_TEMPLATE = jinja2.Template(u"""
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2013-2014, Martín Gaitán
+# Copyright (c) 2012-2013, Alexander Jung-Loddenkemper
+# This file is part of Waliki (http://waliki.nqnwebs.com/)
+# License: BSD (https://github.com/mgaitan/waliki/blob/master/LICENSE)
+
+import os
+
+CONFIG_PATH = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)),
+    "config.py"
+)
+
+os.environ.setdefault("WALIKI_CONFIG_MODULE", CONFIG_PATH)
+
+import waliki
+application = core.get_app(load_config=True)
+
+
 """)
 
 
@@ -120,6 +146,9 @@ BOOTSWATCH_THEME = '{{bootswatch}}'
 
 # The custom css is the last one to be aplied to the style
 CUSTOM_CSS = '{{custom_css}}'
+
+# The Editor theme
+EDITOR_THEME = '{{editor_theme}}'
 
 """)
 
@@ -187,6 +216,17 @@ CONFIG_OPTIONS = (
         "no_prompt": True,
         "default": lambda bn, fp: os.path.join(fp, RESOURCES_DIRNAME, "waliki.css"),
     },
+    {
+        "var": "editor_theme",
+        "prompt": "Choose Editor Theme (cobalt|eclipse|rubyblue|xq-light|monokai|ambiance|solarized|lesser-dark|neat|midnight\nelegant|ambiance-mobile|xq-dark|vibrant-ink|erlang-dark|twilight|blackboard|night)",
+        "default": lambda bn, fp: "monokai",
+        "validator": lambda v: v in ("cobalt", "eclipse", "rubyblue",
+                                     "xq-light", "monokai", "ambiance",
+                                     "solarized", "lesser-dark", "neat",
+                                     "midnight", "elegant", "ambiance-mobile",
+                                     "xq-dark", "vibrant-ink", "erlang-dark",
+                                     "twilight", "blackboard", "night")
+    },
 
 
 )
@@ -214,6 +254,7 @@ def create_wiki(dest):
         else:
             prompt = option["prompt"]
             value = raw_input("{} [{}]: ".format(prompt, default))
+            value = value.strip()
             if not value:
                 value = default
             else:
@@ -253,15 +294,14 @@ def create_wiki(dest):
     walikipy_fpath = os.path.join(fulldest, WALIKIPY_FILENAME)
     with codecs.open(walikipy_fpath, "w", encoding="utf8") as fp:
         fp.write(WALIKIPY_TEMPLATE.render())
+    wsgi_fpath = os.path.join(fulldest, WSGI_FILENAME)
+    with codecs.open(wsgi_fpath, "w", encoding="utf8") as fp:
+        fp.write(WSGI_TEMPLATE.render())
 
     res_fpath = os.path.join(fulldest, RESOURCES_DIRNAME)
     shutil.copytree(core.RESOURCES_PATH, res_fpath)
 
     print("Your Wiki is ready!")
-
-
-
-
 
 
 #===============================================================================

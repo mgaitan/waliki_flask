@@ -52,13 +52,9 @@ app = core.app
 # CONSTANTS
 #===============================================================================
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_DIR = os.path.join(PROJECT_ROOT, "_data")
-CONTENT_DIR = os.path.join(DATA_DIR, "content")
-CACHE_DIR = os.path.join(DATA_DIR, "cache")
+CONFIG_FILE_PATH = os.environ.get("WALIKI_CONFIG_MODULE")
 
 CUSTOM_STATICS_DIR_NAME = "_custom"
-CONFIG_FILE_PATH = os.path.join(PROJECT_ROOT, "config.py")
 
 CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
 
@@ -198,22 +194,22 @@ class SignupForm(Form):
 #===============================================================================
 
 app.debug = True
-app.config['PROJECT_ROOT'] = PROJECT_ROOT
-app.config['CONTENT_DIR'] = CONTENT_DIR
-app.config['DATA_DIR'] = DATA_DIR
-app.config['TITLE'] = 'wiki'
-app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
-app.config['EDITOR_THEME'] = 'monokai'  # more at necul/static/codemirror/theme
-app.config['CUSTOM_STATICS_DIR_NAME'] = CUSTOM_STATICS_DIR_NAME
-app.config['CUSTOM_STATICS'] = {}
 try:
     app.config.from_pyfile(CONFIG_FILE_PATH)
 except IOError:
-    print ("Startup Failure: You need to place a "
-           "config.py in your content directory.")
+    print ("Enviroment variable 'WALIKI_CONFIG_MODULE' not found")
+    sys.exit(1)
+
+app.config['CONTENT_DIR'] = os.path.join(app.config['DATA_DIR'], "content")
+app.config['CACHE_DIR'] = os.path.join(app.config['DATA_DIR'], "cache")
+app.config['WIKI_ROOT'] = os.path.dirname(CONFIG_FILE_PATH)
+app.config['EDITOR_THEME'] = 'monokai'
+app.config['CUSTOM_STATICS_DIR_NAME'] = CUSTOM_STATICS_DIR_NAME
+app.config['CUSTOM_STATICS'] = {}
+
 
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
-                            'CACHE_DIR': CACHE_DIR})
+                            'CACHE_DIR': app.config["CACH_DIR"]})
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
@@ -245,7 +241,7 @@ for cs in CUSTOM_STATICS_LIST:
     if csvalue:
         csbasename = os.path.basename(csvalue)
         cspath = (csvalue if os.path.isabs(cs) else
-                  os.path.join(PROJECT_ROOT, csvalue))
+                  os.path.join(ap.config["WIKI_ROOT"], csvalue))
         app.config['CUSTOM_STATICS'][csbasename] = os.path.dirname(cspath)
         app.config[cs] = csbasename
 

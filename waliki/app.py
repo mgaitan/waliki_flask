@@ -209,7 +209,7 @@ app.config['CUSTOM_STATICS'] = {}
 
 
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
-                            'CACHE_DIR': app.config["CACH_DIR"]})
+                            'CACHE_DIR': app.config["CACHE_DIR"]})
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
@@ -241,7 +241,7 @@ for cs in CUSTOM_STATICS_LIST:
     if csvalue:
         csbasename = os.path.basename(csvalue)
         cspath = (csvalue if os.path.isabs(cs) else
-                  os.path.join(ap.config["WIKI_ROOT"], csvalue))
+                  os.path.join(app.config["WIKI_ROOT"], csvalue))
         app.config['CUSTOM_STATICS'][csbasename] = os.path.dirname(cspath)
         app.config[cs] = csbasename
 

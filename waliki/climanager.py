@@ -44,7 +44,7 @@ manager = script.Manager(core.app)
 # CONSTANTS
 #===============================================================================
 
-WALIKIPY_FILENAME = "manager.py"
+WALIKIPY_FILENAME = "run.py"
 
 WALIKIPY_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -109,7 +109,7 @@ SECRET_KEY = '{{secret_key}}'
 # The extensions are the name of the files inside 'extension folder'
 EXTENSIONS = (
     {%- for ext in extensions %}
-    '{{ext}}'
+    '{{ext}}',
     {%- endfor %}
 )
 
@@ -175,7 +175,7 @@ CONFIG_OPTIONS = (
         "default": lambda bn, fp: make_secret_key(),
     },
     {
-        "var": "data_dir",
+        "var": "datadir",
         "prompt": "The name of the directory to store your pages",
         "default": lambda bn, fp: "_data",
         "validator": lambda v: os.path.sep not in v
@@ -236,8 +236,8 @@ CONFIG_OPTIONS = (
 #===============================================================================
 
 @manager.command
-def create_wiki(dest):
-    """Create a configuration file and a wsgi for a new wiki"""
+def config(dest):
+    """Create a new wiki into a given directory"""
     basename = os.path.basename(dest)
     fulldest = dest if os.path.isabs(dest) else os.path.abspath(dest)
 

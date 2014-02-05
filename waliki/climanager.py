@@ -24,6 +24,7 @@ import random
 import hashlib
 import time
 import codecs
+import shutil
 
 import jinja2
 
@@ -43,9 +44,9 @@ manager = script.Manager(core.app)
 # CONSTANTS
 #===============================================================================
 
-WALIKI_FILENAME = "waliki.py"
+WALIKIPY_FILENAME = "manager.py"
 
-WALIKI_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
+WALIKIPY_TEMPLATE = jinja2.Template(u"""#!/usr/bin/env python
 import os
 import sys
 
@@ -56,8 +57,8 @@ CONFIG_PATH = os.path.join(
 
 if __name__ == "__main__":
     os.environ.setdefault("WALIKI_CONFIG_MODULE", CONFIG_PATH)
-    from waliki.app import app
-    app.manager.run()
+    import waliki
+    waliki.run(load_config=True)
 """)
 
 
@@ -114,7 +115,9 @@ CUSTOM_CSS = '{{custom_css}}'
 
 """)
 
-REQUIREMENTS_FILE = "requirements.txt"
+RESOURCES_DIRNAME = "res"
+
+REQUIREMENTS_FILENAME = "requirements.txt"
 
 REQUIREMENTS_TEMPLATE = jinja2.Template("""
 {%- for r in requirements %}
@@ -155,12 +158,12 @@ CONFIG_OPTIONS = (
     {
         "var": "navbar_icon",
         "no_prompt": True,
-        "default": lambda bn, fp: os.path.join(fp, "res", "logo.png"),
+        "default": lambda bn, fp: os.path.join(fp, RESOURCES_DIRNAME, "logo.png"),
     },
     {
         "var": "favicon",
         "no_prompt": True,
-        "default": lambda bn, fp: os.path.join(fp, "res", "favicon.ico"),
+        "default": lambda bn, fp: os.path.join(fp, RESOURCES_DIRNAME, "favicon.ico"),
     },
     {
         "var": "bootswatch",
@@ -174,7 +177,7 @@ CONFIG_OPTIONS = (
     {
         "var": "custom_css",
         "no_prompt": True,
-        "default": lambda bn, fp: os.path.join(fp, "res", "waliki.css"),
+        "default": lambda bn, fp: os.path.join(fp, RESOURCES_DIRNAME, "waliki.css"),
     },
 
 
@@ -236,9 +239,15 @@ def create_wiki(dest):
     config_fpath = os.path.join(fulldest, CONFIG_FILENAME)
     with codecs.open(config_fpath, "w", encoding="utf8") as fp:
         fp.write(CONFIG_TEMPLATE.render(config_context))
-    requirements_fpath = os.path.join(fulldest, REQUIREMENTS_FILE)
+    requirements_fpath = os.path.join(fulldest, REQUIREMENTS_FILENAME)
     with codecs.open(requirements_fpath, "w", encoding="utf8") as fp:
         fp.write(REQUIREMENTS_TEMPLATE.render(requirements=requirements))
+    walikipy_fpath = os.path.join(fulldest, WALIKIPY_FILENAME)
+    with codecs.open(walikipy_fpath, "w", encoding="utf8") as fp:
+        fp.write(WALIKIPY_TEMPLATE.render())
+
+    res_fpath = os.path.join(fulldest, RESOURCES_DIRNAME)
+    shutil.copytree(core.RESOURCES_PATH, res_fpath)
 
     print("Your Wiki is ready!")
 

@@ -37,6 +37,8 @@ EXTENSIONS = frozenset(
     for mn in os.listdir(EXTENSIONS_PATH) if not mn.startswith("_")
 )
 
+RESOURCES_PATH = os.path.join(WALIKI_PATH, "res")
+
 
 #===============================================================================
 # APP
@@ -56,7 +58,9 @@ def get_extension(ext):
 
 
 def get_extension_requirements(ext):
+    """Returns a list of all dependencies of the given extension"""
     return get_extension(ext).REQUIREMENTS
+
 
 
 #===============================================================================

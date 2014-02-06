@@ -113,7 +113,7 @@ EXTENSIONS = (
     {%- endfor %}
 )
 
-# DATADIR
+# All the pages and other data of the wiki is stored here
 DATA_DIR = '{{datadir}}'
 
 # restructuredtext or markdown
@@ -122,9 +122,11 @@ MARKUP = '{{ markup }}'
 # PERMISSIONS can be:
 #   public: everybody can read and write a page (default)
 #   protected: anyone can view but only registered users can write
-#   secure: only registered users can see this wiki
-#   private: all the users are created inactive
+#   private: only registered users can see this wiki
 PERMISSIONS = '{{permissions}}'
+
+# If 'False' all users are created inactive
+BY_DEFAULT_ACTIVE_USER = {{by_default_active_user}}
 
 # Can be HTML
 CUSTOM_FOOTER = 'Powered by <a href="http://waliki.nqnwebs.com/"> Waliki</a>'
@@ -188,9 +190,15 @@ CONFIG_OPTIONS = (
     },
     {
         "var": "permissions",
-        "prompt": "Choice the permissions level (public|protected|secure|private)",
+        "prompt": "Choice the permissions level (public|protected|private)",
         "default": lambda bn, fp: "public",
-        "validator": lambda v: v in ("public", "protected", "secure", "private")
+        "validator": lambda v: v in ("public", "protected", "private")
+    },
+    {
+        "var": "by_default_active_user",
+        "prompt": "Users are create active?",
+        "default": lambda bn, fp: "True",
+        "validator": lambda v: v in ("True", "False")
     },
     {
         "var": "navbar_icon",
@@ -236,7 +244,7 @@ CONFIG_OPTIONS = (
 #===============================================================================
 
 @manager.command
-def config(dest):
+def startwiki(dest):
     """Create a new wiki into a given directory"""
     basename = os.path.basename(dest)
     fulldest = dest if os.path.isabs(dest) else os.path.abspath(dest)

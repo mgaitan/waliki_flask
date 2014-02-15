@@ -60,7 +60,6 @@ CUSTOM_STATICS_LIST = ["NAV_BAR_ICON", "FAVICON", "CUSTOM_CSS"]
 
 PERMISSIONS_PUBLIC = "public"
 PERMISSIONS_PROTECTED = "protected"
-PERMISSIONS_SECURE = "secure"
 PERMISSIONS_PRIVATE = "private"
 DEFAULT_PERMISSIONS = PERMISSIONS_PUBLIC
 
@@ -76,7 +75,7 @@ def user_can_edit(can_modify=True):
     elif pers == PERMISSIONS_PROTECTED:
         if can_modify and not current_user.is_authenticated():
             return False
-    elif pers in (PERMISSIONS_SECURE, PERMISSIONS_PRIVATE):
+    elif pers in PERMISSIONS_PRIVATE:
         if not current_user.is_authenticated():
             return False
     return True
@@ -209,7 +208,7 @@ app.config['CUSTOM_STATICS'] = {}
 
 
 cache.init_app(app, config={'CACHE_TYPE': 'filesystem',
-                            'CACHE_DIR': app.config["CACH_DIR"]})
+                            'CACHE_DIR': app.config["CACHE_DIR"]})
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
@@ -241,7 +240,7 @@ for cs in CUSTOM_STATICS_LIST:
     if csvalue:
         csbasename = os.path.basename(csvalue)
         cspath = (csvalue if os.path.isabs(cs) else
-                  os.path.join(ap.config["WIKI_ROOT"], csvalue))
+                  os.path.join(app.config["WIKI_ROOT"], csvalue))
         app.config['CUSTOM_STATICS'][csbasename] = os.path.dirname(cspath)
         app.config[cs] = csbasename
 
@@ -428,12 +427,13 @@ def user_index():
 def user_signup():
     form = SignupForm()
     if form.validate_on_submit():
-        active_user = app.config.get('PERMISSIONS', DEFAULT_PERMISSIONS) != PERMISSIONS_PRIVATE
+        active_user = app.config.get('BY_DEFAULT_ACTIVE_USER', True)
         app.users.add_user(form.name.data, form.password.data,
                            form.full_name.data, form.email.data, active_user,
                            authentication_method=get_default_authentication_method())
-        flash('You were registered successfully. Please login now.', 'success')
-        if not active_user:
+        if active_user:
+            flash('You were registered successfully. Please login now.', 'success')
+        else:
             flash('Your user is inactive by default, please contact the wiki admin', 'error')
         return redirect(request.args.get('next') or url_for('index'))
     return render_template('signup.html', form=form)

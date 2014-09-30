@@ -1,10 +1,10 @@
 
 **Waliki** is an extensible wiki engine based on Flask.
 
+**ATENTION: this project is no longer mantained. The new `Waliki <https://github.com/mgaitan/waliki>`_ is powered by Django**
+
+
 :home: https://github.com/mgaitan/waliki/
-:documentation: http://waliki.rtfd.org (under development)
-:demo: http://waliki.nqnwebs.com
-:discussion group: https://groups.google.com/forum/#!forum/waliki-devs
 :license: `BSD <https://github.com/mgaitan/waliki/blob/master/LICENSE>`_
 
 At a glance, Waliki has:
